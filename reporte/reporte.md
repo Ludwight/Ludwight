@@ -8,19 +8,19 @@ lang: es
 
 <div class="video">
 **Video (YouTube):** <https://www.youtube.com/shorts/1UjPvbtYBLU>  
-**Código:** `BFS_escalon_descendente.ipynb` (Ejecutar todo, ~5 min; sólo `numpy`, `scipy`, `matplotlib`)
+**Código:** `escalon_descendente.ipynb` (Ejecutar todo, ~3 min; sólo `numpy`, `scipy`, `matplotlib`)
 </div>
 
 ## Resumen
 
 Se simula el flujo bidimensional, incompresible y laminar en un canal con un escalón descendente de relación de
-expansión 2, para números de Reynolds de 100 a 800. Las ecuaciones de Navier–Stokes se resuelven con un código propio
+expansión 2, para números de Reynolds de 100 a 600. Las ecuaciones de Navier–Stokes se resuelven con un código propio
 en Python: volúmenes finitos en malla escalonada (MAC), método de proyección de Chorin con Euler explícito y ecuación de
 Poisson para la presión resuelta por factorización LU dispersa. El código conserva la masa a precisión de máquina
 ($\max|\nabla\cdot\mathbf u|\sim10^{-15}$). La longitud de reacoplamiento $x_r$ crece casi linealmente con $Re$
 ($x_r/S$ = 3.01, 4.90, 6.52, 7.90, 9.75 para $Re$ = 100–600) y desde $Re\approx400$ aparece una burbuja secundaria
-en la pared superior. Se presenta un análisis paramétrico de viscosidad (Re), malla (con extrapolación de Richardson),
-paso de tiempo (límite de estabilidad) y esquema convectivo (difusión numérica), y se compara con la literatura.
+en la pared superior. Se presenta un análisis paramétrico de viscosidad (Re), malla y paso de tiempo (límite de estabilidad), y se compara
+con la literatura (diferencias menores a 3.5 %).
 
 ## 1. Introducción y descripción del fenómeno
 
@@ -66,7 +66,7 @@ $$\frac{\partial v}{\partial t}+\frac{\partial (uv)}{\partial x}+\frac{\partial 
 
 1. Flujo bidimensional (canal infinitamente ancho en $z$).
 2. Incompresible, $\rho$ constante; fluido newtoniano con $\mu$ constante; isotérmico.
-3. Laminar ($Re\le800$); la transición en el BFS ocurre alrededor de $Re\approx1200$ (Armaly et al.).
+3. Laminar ($Re\le600$); la transición en el BFS ocurre alrededor de $Re\approx1200$ (Armaly et al.).
 4. Sin fuerzas de cuerpo: la gravedad sólo añade una presión hidrostática que no cambia la cinemática.
 
 ### 2.4 Condiciones iniciales y de frontera
@@ -87,8 +87,10 @@ estacionario. El perfil de entrada tiene velocidad media $U$ y máxima $1.5U$.
 
 La presión se almacena en el centro de cada celda, $u$ en las caras verticales y $v$ en las horizontales. Así el
 gradiente de presión que mueve cada velocidad usa dos nodos vecinos directos y se evita el desacople
-presión–velocidad ("tablero de ajedrez") sin interpolación de Rhie–Chow. Las condiciones de no deslizamiento para la
+presión–velocidad ("tablero de ajedrez") sin necesidad de correcciones adicionales. Las condiciones de no deslizamiento para la
 componente tangencial se imponen con celdas fantasma ($u_{fantasma}=-u_{interior}$).
+
+![Malla escalonada: $p$ en el centro, $u$ y $v$ en las caras; fila de celdas fantasma bajo la pared.](../figures/malla_escalonada.png){width=55%}
 
 ### 3.2 Método de proyección (paso fraccionado de Chorin)
 
@@ -104,24 +106,25 @@ divergencia discreta en cero a precisión de máquina.
 
 ### 3.3 Discretización espacial
 
-Difusión: diferencias centrales de segundo orden. Convección: esquema híbrido de Hirt (Griebel et al., 1998), por ejemplo
-$$\left.\frac{\partial(u^2)}{\partial x}\right|_i\approx\frac{u_e^2-u_w^2}{\Delta x}+\frac{\gamma}{\Delta x}\left[|u_e|\frac{u_i-u_{i+1}}2-|u_w|\frac{u_{i-1}-u_i}2\right],\quad u_e=\tfrac{u_i+u_{i+1}}2.$$
-Con $\gamma=0$ es centrado (2.º orden) y con $\gamma=1$ es *upwind* (1.er orden). Se usa $\gamma=0.5$ salvo en el estudio
-de la sección 5.4.
+Difusión: diferencias centrales de segundo orden (laplaciano de 5 puntos). Convección: en forma conservativa, como
+"lo que sale menos lo que entra" por las caras del volumen de control, por ejemplo
+$$\left.\frac{\partial(u^2)}{\partial x}\right|_i\approx\frac{u_e\,u_{cara,e}-u_w\,u_{cara,w}}{\Delta x},\qquad
+u_{cara,e}=\frac{u_i+u_{i+1}}2-\frac{\gamma}{2}\,\mathrm{signo}(u_e)\,(u_{i+1}-u_i).$$
+Es decir, el valor en la cara es el promedio de los vecinos corrido hacia el lado de donde viene el flujo. Con
+$\gamma=0$ es el promedio puro (preciso pero inestable con Euler explícito) y con $\gamma=1$ es *upwind* (estable pero con
+difusión numérica). Se usa $\gamma=0.5$.
 
 ### 3.4 Estabilidad y convergencia
 
 Para Euler explícito:
 $$\Delta t\le\min\left(\frac{\Delta x}{|u|_{max}},\;\frac{Re}2\left(\frac1{\Delta x^2}+\frac1{\Delta y^2}\right)^{-1}\right),$$
-(CFL convectivo y número de Fourier difusivo). Por defecto se usa el 50 % del límite. Con $\gamma=0$ aparece además
-$\Delta t\le2\nu/|u|^2_{max}$. Se declara estado estacionario cuando $\max|\mathbf u^{n+1}-\mathbf u^n|/\Delta t<10^{-5}$.
+(CFL convectivo y número de Fourier difusivo). Por defecto se usa el 50 % del límite. Se declara estado estacionario cuando $\max|\mathbf u^{n+1}-\mathbf u^n|/\Delta t<10^{-5}$.
 
 ### 3.5 Post-proceso
 
 $x_r$ se obtiene como el cruce de $-$ a $+$ de $\tau_w\propto u$ en la primera celda junto a la pared inferior, aguas
 abajo del mínimo de $u$ (así no se confunde con el pequeño vórtice de esquina). La burbuja secundaria se detecta igual
-en la pared superior. Se calculan también vorticidad $\omega=\partial v/\partial x-\partial u/\partial y$ y función de
-corriente $\psi=\int_0^y u\,dy$.
+en la pared superior. Se calcula también la vorticidad $\omega=\partial v/\partial x-\partial u/\partial y$.
 
 ## 4. Resultados: caso base Re = 200
 
@@ -148,13 +151,12 @@ Por conservación de masa la velocidad máxima baja de $1.5U$ (canal de entrada)
 | 100 | 0.0100 | 3.01 | — |
 | 200 | 0.0050 | 4.90 | — |
 | 300 | 0.0033 | 6.52 | — |
-| 400 | 0.0025 | 7.90 | 7.89 – 8.14 (incipiente) |
-| 600 | 0.0017 | 9.75 | 7.99 – 13.45 |
-| 800 | 0.0013 | 10.45 | 8.36 – 16.13 |
+| 400 | 0.0025 | 7.90 | 7.9 – 8.1 (incipiente) |
+| 600 | 0.0017 | 9.75 | 8.0 – 13.4 |
 
-![Velocidad y líneas de corriente para Re = 100 a 600. En rojo, zonas de flujo inverso ($u<0$).](../figures/re_streamfunction.png)
+![Velocidad y líneas de corriente para Re = 100 a 600. En rojo, zonas de flujo inverso ($u<0$).](../figures/re_remolinos.png)
 
-![Esfuerzo cortante en la pared inferior. Cada curva cruza cero en su $x_r$.](../figures/re_tau_w.png)
+![Esfuerzo cortante en la pared inferior. Cada curva cruza cero en su $x_r$.](../figures/re_cortante.png)
 
 Al bajar la viscosidad la burbuja principal se alarga casi linealmente con $Re$ hasta ~400 y después crece más lento,
 cuando aparece la burbuja superior: ésta estrecha el paso del flujo principal, lo empuja hacia abajo y limita el
@@ -168,12 +170,12 @@ $\tau_w\propto\nu$.
 | 10 | 1 500 | 4.466 | 0.5 s |
 | 20 | 6 000 | 4.899 | 3.8 s |
 | 40 | 24 000 | 5.114 | 37 s |
-| Richardson ($h\to0$) | | 5.323 | |
 
-El orden observado es $p=1.02$ y el GCI de la malla fina es 5.1 %. El orden 1 (y no 2) se debe a la parte *upwind* del
-esquema convectivo. El costo crece ~10× por cada refinamiento (4× celdas, 2× pasos por el CFL).
+Cada vez que se duplica la malla, el cambio en $x_r$ se reduce a la mitad (+0.43 y luego +0.21), así que el valor con
+malla infinitamente fina estaría cerca de $x_r/S\approx5.3$ y el error con 20 celdas/$H$ es de ~8 %. El costo crece ~10×
+por cada refinamiento (4× celdas y 2× pasos por el CFL).
 
-![Convergencia de $x_r$ con la malla y perfil $u(y)$ en $x=3H$.](../figures/malla.png)
+![Cambio de $x_r$ con la malla y perfil $u(y)$ en $x=3H$.](../figures/malla.png)
 
 ### 5.3 Paso de tiempo y estabilidad
 
@@ -184,29 +186,12 @@ Para $Re=200$ y 20 celdas/$H$: $\Delta t_{CFL}=0.033$ y $\Delta t_{Fo}=0.125$, d
 | 0.0050 | 0.15 | converge | 9721 | 4.899 |
 | 0.0167 | 0.50 | converge | 2910 | 4.899 |
 | 0.0300 | 0.90 | converge | 1620 | 4.899 |
-| 0.0360 | 1.08 | converge | 1350 | 4.899 |
 | 0.0450 | 1.35 | **diverge** en 22 pasos | — | — |
 
 ![Historia del residuo para distintos $\Delta t$.](../figures/dt.png)
 
 El estado estacionario es **independiente de $\Delta t$** mientras el esquema sea estable; un $\Delta t$ mayor sólo
-reduce el número de pasos. Por encima de ~1.1 $\Delta t_{CFL}$ el error crece exponencialmente. La parte *upwind* del
-esquema añade disipación, por eso el límite práctico queda un poco arriba del CFL teórico.
-
-### 5.4 Esquema convectivo y difusión numérica
-
-| $\gamma$ | Esquema | $\Delta t$ | $x_r/S$ |
-|---:|---|---:|---:|
-| 0.0 | centrado | 0.004 | 5.33 |
-| 0.5 | híbrido | 0.0167 | 4.90 |
-| 1.0 | *upwind* | 0.0167 | 4.50 |
-
-![Efecto de $\gamma$ en $\tau_w$ a Re = 200.](../figures/gamma.png)
-
-El *upwind* introduce una viscosidad numérica $\nu_{num}\approx\gamma|u|\Delta x/2\approx0.025$, cinco veces la física
-($\nu=0.005$): el flujo "siente" un $Re$ menor y la burbuja se acorta 16 %. El esquema centrado coincide con la
-extrapolación de Richardson (5.33 vs 5.32), pero necesita un $\Delta t$ cuatro veces menor; con el $\Delta t$ por defecto
-a $Re=400$ diverge en menos de 100 pasos.
+reduce el número de pasos. Por encima del límite CFL el error crece exponencialmente y la solución explota.
 
 ## 6. Validación
 
@@ -219,27 +204,21 @@ a $Re=400$ diverge en menos de 100 pasos.
 | 300 | 6.52 | 6.75 | −3.4 % |
 | 400 | 7.90 | 8.10 | −2.5 % |
 | 600 | 9.75 | 10.05 | −2.9 % |
-| 800 | 10.45 | 11.55 (12.2 Gartling) | −9.5 % (−14 %) |
 
-Con 20 celdas/$H$ la tendencia coincide con la tabla de referencia dentro de ~3 % hasta $Re=600$, y se reproduce la
-burbuja secundaria. Hay que leerlo con cuidado: el estudio de malla indica que el valor convergido a $Re=200$ es
-$x_r/S\approx5.3$, así que a esta malla la difusión numérica acorta la burbuja ~8 % y parte del acuerdo es cancelación de
-errores (la referencia puede además incluir un canal de entrada, que cambia el perfil en la arista). En $Re=800$, con la
-misma configuración que Gartling, la burbuja principal (10.45 vs 12.2) y la superior ($4.18H$–$8.07H$ vs
-$4.85H$–$10.48H$) quedan cortas: el error crece con $Re$ porque la capa de corte es más delgada y $\nu_{num}/\nu$ aumenta.
 
-![Campos a Re = 800: burbuja principal y burbuja secundaria en la pared superior.](../figures/campos_re800.png)
+Las diferencias son menores a 3.5 % y se reproduce el remolino del techo a partir de $Re\approx400$. Parte del buen
+acuerdo es cancelación de errores: según el estudio de malla, con una malla muy fina $x_r$ subiría ~8 %. Para un resultado
+más exacto habría que usar más celdas.
 
 ## 7. Conclusiones
 
-1. El solver de proyección en malla MAC escrito para este proyecto conserva la masa a precisión de máquina y reproduce
-   la física del escalón: separación, recirculación, reacoplamiento y burbuja secundaria para $Re\gtrsim400$.
-2. Bajar la viscosidad (subir $Re$) alarga la burbuja: $x_r/S$ pasa de 3 a casi 10 entre $Re=100$ y 600.
-3. La solución estacionaria no depende de $\Delta t$ si se respeta el CFL; por encima de él el método explícito diverge.
-4. El error de discretización es de orden 1 en la malla y lo domina la difusión numérica del término *upwind*; con
-   20 celdas/$H$ es de ~8 % en $x_r$ a $Re=200$ y crece con $Re$.
-5. Para $Re$ altos se recomienda refinar la malla o usar un esquema convectivo de mayor orden (QUICK, TVD) con integración
-   temporal de segundo orden (Adams–Bashforth).
+1. Se resolvió Navier–Stokes 2D con el método de proyección (velocidad de prueba → presión → corrección); la masa se
+   conserva a precisión de máquina.
+2. La simulación muestra la separación en la esquina, la recirculación, el reacoplamiento y, para $Re\gtrsim400$, la
+   burbuja secundaria en el techo.
+3. Bajar la viscosidad (subir $Re$) alarga la burbuja: $x_r/S$ pasa de 3 a casi 10 entre $Re=100$ y 600.
+4. El resultado converge al refinar la malla; con 20 celdas/$H$ el error es de ~8 %.
+5. $\Delta t$ no cambia la solución estacionaria si se respeta el CFL; por encima de él el método explícito diverge.
 
 ## Referencias
 
@@ -249,14 +228,14 @@ $4.85H$–$10.48H$) quedan cortas: el error crece con $Re$ porque la capa de cor
 4. Griebel, M., Dornseifer, T., Neunhoeffer, T. (1998). *Numerical Simulation in Fluid Dynamics: A Practical Introduction*. SIAM.
 5. Roache, P. J. (1994). Perspective: a method for uniform reporting of grid refinement studies. *J. Fluids Eng.* 116, 405–413.
 6. arXiv:2507.16509 (2025). A Finite Volume and Levenberg–Marquardt Optimization Framework for Benchmarking MHD Flows over Backward-Facing Steps (Tabla 1).
-7. kangluosee. *CFD-Python: Combined backward facing step* (GitHub). Código de referencia; el de este proyecto se reescribió con otro método.
+7. kangluosee. *CFD-Python: Combined backward facing step* (GitHub). Referencia del problema; el código de este proyecto se escribió desde cero.
 
 ## Anexo: uso del código
 
 ```
 pip install numpy scipy matplotlib jupyter
-jupyter notebook BFS_escalon_descendente.ipynb      # Kernel → Restart & Run All
+jupyter notebook escalon_descendente.ipynb      # Kernel → Restart & Run All
 ```
 
-Los parámetros de la demostración en vivo (`RE_BASE`, `NY_BASE`, `GAMMA`, `DT_BASE`) están en el bloque 0.
+Los parámetros de la demostración en vivo (`RE`, `NY`, `L`) están en el bloque 0.
 Las figuras se guardan en `figures/`.

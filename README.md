@@ -1,13 +1,14 @@
-# Escalón descendente (backward-facing step) — Proyecto final de Mecánica de Fluidos
+# Escalón descendente (backward-facing step): Proyecto final de Mecánica de Fluidos
 
-Simulación 2D del flujo laminar incompresible sobre un escalón descendente (relación de expansión 2, Re = 100–800)
-con un solver propio en Python: malla escalonada MAC, método de proyección de Chorin y Poisson por LU dispersa.
+Simulación 2D del flujo laminar incompresible sobre un escalón descendente (el canal se ensancha al doble, Re = 100–600).
+Se resuelven las ecuaciones de Navier–Stokes con el método de proyección en 3 pasos (velocidad de prueba → presión → corrección).
 
 | Entregable | Archivo |
 |---|---|
-| Código (Ejecutar todo, ~5 min) | `BFS_escalon_descendente.ipynb` |
+| Código (Ejecutar todo, ~3.5 min) | `escalon_descendente.ipynb` |
 | Reporte escrito (PDF) | `reporte/reporte.pdf` (fuente: `reporte/reporte.md`) |
 | Diapositivas (10) | `presentacion/presentacion.pptx` (notas del orador con el reparto sugerido) |
+| Guía para estudiar el código línea por línea | `guia/guia_explicacion.pdf` |
 | Video | https://www.youtube.com/shorts/1UjPvbtYBLU |
 | Figuras | `figures/` (las genera el notebook) |
 
@@ -15,22 +16,16 @@ con un solver propio en Python: malla escalonada MAC, método de proyección de 
 
 ```bash
 pip install -r requirements.txt
-jupyter notebook BFS_escalon_descendente.ipynb     # Kernel → Restart & Run All
+jupyter notebook escalon_descendente.ipynb     # Kernel → Restart & Run All
 ```
 
-Los parámetros de la demo en vivo (`RE_BASE`, `NY_BASE`, `GAMMA`, `DT_BASE`) están en el bloque 0 del notebook.
-
-## Estructura
-
-- `src/bfs_solver.py`: solver (malla, Poisson, CF, momento, proyección, post-proceso).
-- `src/plots.py`: gráficas.
-- `build_notebook.py`: arma el notebook autocontenido a partir de `src/` (`python build_notebook.py`).
-- `reporte/build_pdf.py`: Markdown → PDF (pandoc + Chromium).
-- `presentacion/build_slides.py`: genera el .pptx con las figuras.
+Para la demo en vivo, cambiar `RE` (y si se quiere `NY`, `L`) en el bloque 0 del notebook.
 
 ## Resultados principales
 
-| Re | 100 | 200 | 300 | 400 | 600 | 800 |
-|---|---|---|---|---|---|---|
-| x_r/S (este trabajo, 20 celdas/H) | 3.01 | 4.90 | 6.52 | 7.90 | 9.75 | 10.45 |
-| x_r/S (literatura 2D) | 3.00 | 4.95 | 6.75 | 8.10 | 10.05 | 11.55 / 12.2 (Gartling) |
+| Re | 100 | 200 | 300 | 400 | 600 |
+|---|---|---|---|---|---|
+| x_r/S (este trabajo, 20 celdas/H) | 3.01 | 4.90 | 6.52 | 7.90 | 9.75 |
+| x_r/S (literatura 2D) | 3.00 | 4.95 | 6.75 | 8.10 | 10.05 |
+
+Regenerar los documentos: `python reporte/build_pdf.py`, `python guia/build_pdf.py`, `python presentacion/build_slides.py`.
