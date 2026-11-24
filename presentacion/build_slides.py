@@ -1,6 +1,8 @@
-"""Genera presentacion.pptx (10 diapositivas) con las figuras de ../figures.
-Uso: python build_slides.py   (requiere python-pptx y matplotlib; correr antes el notebook)."""
+"""Genera presentacion.pptx (12 diapositivas, 2 con video) con las figuras de ../figures.
+Uso: python build_slides.py   (requiere python-pptx, matplotlib e imageio-ffmpeg; correr antes el notebook)."""
+import subprocess
 from pathlib import Path
+import imageio_ffmpeg
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -67,6 +69,16 @@ def bullets(s, items, x, y, w, h, size=20):
     return tb
 
 
+def video(s, path, x, y, w, t_poster):
+    """Incrusta un MP4 (se reproduce en PowerPoint) con un cuadro del video como portada."""
+    poster = EQ / (path.stem + "_portada.png")
+    subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), "-y", "-loglevel", "error", "-ss", str(t_poster), "-i", str(path),
+                    "-frames:v", "1", str(poster)], check=True)
+    h = w * 9 / 16
+    return s.shapes.add_movie(str(path), Inches(x), Inches(y), Inches(w), Inches(h),
+                              poster_frame_image=str(poster), mime_type="video/mp4")
+
+
 def pic(s, path, x, y, w=None, h=None):
     kw = {}
     if w: kw["width"] = Inches(w)
@@ -82,7 +94,7 @@ tb = s.shapes.add_textbox(Inches(0.8), Inches(1.6), Inches(11.7), Inches(4))
 tf = tb.text_frame; tf.word_wrap = True
 for k, (txt, size, bold) in enumerate([
         ("Flujo laminar sobre un escalón descendente", 40, True),
-        ("Navier–Stokes 2D · método de proyección en 3 pasos · análisis paramétrico", 22, False),
+        ("Navier–Stokes 2D · método de proyección en 3 pasos · tinta virtual · análisis paramétrico", 22, False),
         ("", 12, False),
         ("Mecánica de Fluidos · Proyecto final · Prof. Anuar Sánchez", 20, False),
         ("[Integrante 1] · [Integrante 2] · [Integrante 3] · [Integrante 4]", 20, False)]):
@@ -118,11 +130,11 @@ bullets(s, ["2D, incompresible, newtoniano, isotérmico",
 
 # 4. CI/CF --------------------------------------------------------------------
 s = slide("Condiciones iniciales y de frontera",
-          "Integrante 2. La entrada va en el plano del escalón, igual que el benchmark de Gartling. "
-          "p = 0 en la salida hace no singular la matriz de Poisson.")
+          "Integrante 2. Hay un canal de entrada de 2H antes del escalón, como en los estudios de referencia; el escalón "
+          "es un bloque de celdas sólidas. p = 0 en la salida hace no singular la matriz de Poisson.")
 rows = [("Frontera", "Velocidad", "Presión"),
-        ("Entrada x = 0, S < y < H", "Poiseuille u = 6Uη(1−η), v = 0", "∂p/∂n = 0"),
-        ("Cara del escalón", "u = v = 0 (no deslizamiento)", "∂p/∂n = 0"),
+        ("Entrada x = −2H, S < y < H", "Poiseuille u = 6Uη(1−η), v = 0", "∂p/∂n = 0"),
+        ("Escalón (tapa y cara)", "u = v = 0 (no deslizamiento)", "∂p/∂n = 0"),
         ("Paredes y = 0, H", "u = v = 0 (no deslizamiento)", "∂p/∂n = 0"),
         ("Salida x = L", "∂u/∂x = ∂v/∂x = 0", "p = 0"),
         ("CI (t = 0)", "fluido en reposo u = v = 0", "—")]
@@ -136,70 +148,96 @@ tbl.columns[0].width = Inches(3.6); tbl.columns[1].width = Inches(5.6); tbl.colu
 
 # 5. Método numérico ----------------------------------------------------------
 s = slide("Método numérico: 3 pasos por cada Δt",
-          "Integrante 2/3. Paso 1: NS sin presión. Paso 2: la presión que hace cumplir continuidad (sale de aplicar divergencia "
-          "al paso 3). Paso 3: corregir. CFL: el fluido no avanza más de una celda por paso.")
-eq_block(s, eq_png("proj", [r"$1)\ \mathbf{u}^*=\mathbf{u}^n+\Delta t\left[\frac{1}{Re}\nabla^2\mathbf{u}^n-\nabla\cdot(\mathbf{u}\mathbf{u})^n\right]$",
+          "Integrante 2/3. Paso 1: NS sin presión; Adams-Bashforth estima la aceleración a mitad del paso con la actual y la "
+          "anterior (Euler explota con convección por promedio). Paso 2: la presión que hace cumplir continuidad (sale de "
+          "aplicar divergencia al paso 3). Paso 3: corregir. CFL: el fluido no avanza más de una celda por paso.")
+eq_block(s, eq_png("proj", [r"$1)\ \mathbf{u}^*=\mathbf{u}^n+\Delta t\left[\frac{3}{2}A^n-\frac{1}{2}A^{n-1}\right]$",
+                       r"$\quad A=\frac{1}{Re}\nabla^2\mathbf{u}-\nabla\cdot(\mathbf{u}\mathbf{u})$",
                        r"$2)\ \nabla^2 p^{n+1}=\frac{\nabla\cdot\mathbf{u}^*}{\Delta t}$",
                        r"$3)\ \mathbf{u}^{n+1}=\mathbf{u}^*-\Delta t\,\nabla p^{n+1}$",
                        r"$\Delta t\leq\min\left(\frac{\Delta x}{|u|_{max}},\ \frac{Re}{2}\left(\frac{1}{\Delta x^2}+\frac{1}{\Delta y^2}\right)^{-1}\right)$"],
-            fs=24), 0.4, 1.4, h_line=0.7, gap=0.45)
+            fs=24), 0.4, 1.3, h_line=0.68, gap=0.33)
 pic(s, FIG / "malla_escalonada.png", 8.6, 1.2, w=4.5)
-bullets(s, ["Derivadas → diferencias entre celdas",
+bullets(s, ["Derivadas → diferencias; valor en la cara = promedio",
             "p en el centro, u y v en las caras",
+            "Adams–Bashforth: estable sin difusión falsa",
             "Poisson: sistema lineal A·p = b (LU)",
-            "∇·u = 10⁻¹⁵: la masa se conserva"], 8.5, 4.6, 4.7, 2.8, size=16)
+            "∇·u = 10⁻¹⁴: la masa se conserva"], 8.5, 4.4, 4.7, 3.0, size=15)
 
 # 6. Caso base ----------------------------------------------------------------
-s = slide("Caso base Re = 200: x_r/S = 4.90",
+s = slide("Caso base Re = 200: x_r/S = 4.91",
           "Integrante 3. Leer vorticidad (capa de corte) y presión (recuperación aguas abajo = gradiente adverso). "
           "Aquí va la DEMO EN VIVO: cambiar RE_BASE en el bloque 0 y ejecutar.")
 pic(s, FIG / "campos_base.png", 0.4, 1.1, h=4.6)
 pic(s, FIG / "perfiles_base.png", 0.4, 5.75, h=1.65)
-bullets(s, ["6000 celdas, 2916 pasos, ~4 s", "p sube tras el escalón: gradiente adverso",
+bullets(s, ["6400 celdas, 2608 pasos, ~3 s", "p sube tras el escalón: gradiente adverso",
             "u_max: 1.5 → 0.75 (masa)"], 9.6, 5.6, 3.6, 1.8, size=15)
 
-# 7. Reynolds -----------------------------------------------------------------
+# 7. Video del arranque -------------------------------------------------------
+s = slide("Video: cómo se forma el remolino (Re = 200)",
+          "Integrante 3. Señalar: (1) vórtice de arranque en forma de hongo, (2) separación pasajera en el techo, "
+          "(3) x_r(t) crece y se aplana, (4) el tablero gris queda atrapado en la burbuja: eso es recirculación. "
+          "El video se reproduce en PowerPoint (clic sobre él).")
+video(s, FIG / "arranque_re200.mp4", 0.35, 1.05, 10.9, t_poster=3.0)
+bullets(s, ["Tinta virtual: partículas que el flujo arrastra",
+            "Vórtice de arranque",
+            "Separación pasajera en el techo",
+            "Fluido atrapado: recirculación"], 11.35, 1.3, 1.95, 5.5, size=14)
+
+# 8. Reynolds -----------------------------------------------------------------
 s = slide("Efecto de la viscosidad (Re)",
           "Integrante 3/4. x_r crece casi lineal hasta Re 400; luego más lento porque la burbuja superior "
           "empuja el chorro hacia abajo.")
 pic(s, FIG / "re_remolinos.png", 0.3, 1.2, w=8.0)
 pic(s, FIG / "re_cortante.png", 8.5, 1.3, w=4.7)
-bullets(s, ["Re 100 → 600: x_r/S 3.0 → 9.8", "Burbuja superior desde Re ≈ 400",
+bullets(s, ["Re 100 → 600: x_r/S 2.8 → 10.1", "Burbuja superior desde Re ≈ 400",
             "τ_w = 0 marca el reacoplamiento"], 8.5, 3.4, 4.7, 3, size=17)
 
-# 8. Malla y dt ---------------------------------------------------------------
+# 9. Video comparativo --------------------------------------------------------
+s = slide("Video: tres viscosidades a la vez",
+          "Integrante 4. Re = 100 se calma en t ≈ 20; Re = 600 forma varios vórtices que viajan y se juntan, y una burbuja en "
+          "el techo que se queda. Menos viscosidad = transitorio más largo y remolino más largo.")
+video(s, FIG / "comparacion_re.mp4", 0.35, 1.05, 10.9, t_poster=5.0)
+bullets(s, ["Re = 100: se calma en t ≈ 20",
+            "Re = 600: vórtices que viajan y se juntan",
+            "Burbuja del techo sólo a Re alto"], 11.35, 1.3, 1.95, 5.5, size=14)
+
+# 10. Malla y dt --------------------------------------------------------------
 s = slide("Malla y paso de tiempo",
-          "Integrante 4. Duplicar la malla reduce el cambio a la mitad: con malla muy fina x_r/S ~ 5.3 (error ~8 % con NY = 20). "
-          "dt no cambia el resultado estacionario si cumple CFL.")
+          "Integrante 4. Duplicar la malla reduce el cambio unas 5 veces (esquema de segundo orden): con NY = 20 el error es < 1 %. "
+          "dt no cambia el resultado estacionario si es estable. Euler simple explota: por eso Adams-Bashforth.")
 pic(s, FIG / "malla.png", 0.3, 1.15, w=7.2)
 pic(s, FIG / "dt.png", 7.6, 1.15, w=5.5)
-bullets(s, ["NY = 10 / 20 / 40 → x_r/S = 4.47 / 4.90 / 5.11 (el cambio se reduce a la mitad: converge)",
-            "Δt ≤ 0.9 Δt_CFL: mismo resultado x_r/S = 4.90, sólo cambia el número de pasos",
-            "Δt = 1.35 Δt_CFL: la solución explota en 22 pasos"], 0.5, 4.2, 12.3, 3, size=19)
+bullets(s, ["NY = 10 / 20 / 40 → x_r/S = 4.75 / 4.91 / 4.95: con 20 celdas el error es < 1 %",
+            "Δt ≤ 0.8 Δt_CFL: mismo resultado x_r/S = 4.91, sólo cambia el número de pasos",
+            "Δt = Δt_CFL explota en 36 pasos; Euler simple explota en 706 aunque Δt sea chico"], 0.5, 4.2, 12.3, 3, size=19)
 
-# 9. Esquema y validación ------------------------------------------------------
+# 11. Comparación con la literatura ------------------------------------------
 s = slide("Comparación con la literatura",
-          "Integrante 4. Diferencias < 3.5 %. Parte del acuerdo es suerte: con malla fina x_r subiría ~8 %.")
+          "Integrante 4. Diferencias de 2 % o menos de Re 200 a 600. El error de malla es < 1 %, así que la diferencia es del orden "
+          "de la dispersión entre estudios publicados.")
 pic(s, FIG / "validacion.png", 0.4, 1.2, w=7.6)
-rows = [("Re", "Nuestro", "Literatura", "Dif."), ("100", "3.01", "3.00", "+0.5 %"), ("200", "4.90", "4.95", "−1.0 %"),
-        ("300", "6.52", "6.75", "−3.4 %"), ("400", "7.90", "8.10", "−2.5 %"), ("600", "9.75", "10.05", "−2.9 %")]
-tbl = s.shapes.add_table(len(rows), 4, Inches(8.3), Inches(1.4), Inches(4.7), Inches(3.3)).table
+rows = [("Re", "Nuestro", "Literatura", "Dif."), ("100", "2.84", "3.00", "−5.4 %"), ("200", "4.91", "4.95", "−0.7 %"),
+        ("300", "6.73", "6.75", "−0.3 %"), ("400", "8.26", "8.10", "+2.0 %"), ("500", "9.40", "9.30", "+1.1 %"),
+        ("600", "10.06", "10.05", "+0.1 %")]
+tbl = s.shapes.add_table(len(rows), 4, Inches(8.3), Inches(1.3), Inches(4.7), Inches(3.6)).table
 for i, rw in enumerate(rows):
     for j, c in enumerate(rw):
         tbl.cell(i, j).text = c
         tbl.cell(i, j).text_frame.paragraphs[0].font.size = Pt(17)
         tbl.cell(i, j).text_frame.paragraphs[0].font.bold = (i == 0)
-bullets(s, ["Diferencias < 3.5 %", "Remolino del techo desde Re ≈ 400, como en la literatura"], 8.3, 5.0, 4.8, 2, size=17)
+bullets(s, ["≤ 2 % para Re 200–600", "Remolino del techo desde Re ≈ 400, como en la literatura"], 8.3, 5.1, 4.8, 2, size=17)
 
-# 10. Conclusiones ------------------------------------------------------------
+# 12. Conclusiones ------------------------------------------------------------
 s = slide("Conclusiones",
           "Cierre (1 min) y preguntas. Tener el notebook abierto para la demo.")
 bullets(s, ["Navier–Stokes resuelto con el método de proyección; la masa se conserva",
             "Reproduce separación, reacoplamiento y burbuja secundaria",
-            "Menor viscosidad → burbuja más larga (x_r ∝ Re hasta ~400)",
-            "Δt sólo afecta la estabilidad, no el estado estacionario",
-            "La malla converge; con 20 celdas/H el error es ~8 %",
-            "Siguiente paso: malla más fina o esquema de mayor orden"], 0.6, 1.3, 12, 5.5, size=22)
+            "Menor viscosidad → burbuja más larga (x_r ∝ Re hasta ~400) y arranque más agitado",
+            "Segundo orden: con 20 celdas/H el error de malla es < 1 %; literatura ±2 %",
+            "Δt sólo afecta la estabilidad; Euler explota, Adams–Bashforth no",
+            "La tinta virtual muestra el vórtice de arranque y el fluido atrapado",
+            "Siguiente paso: Re > 800 (inestabilidad, 3D) con malla más fina"], 0.6, 1.3, 12, 5.5, size=22)
 
 out = HERE / "presentacion.pptx"
 prs.save(out)

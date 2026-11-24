@@ -34,41 +34,57 @@ presión podría oscilar en zig-zag sin que el método lo notara.
 justo a la mitad entre la celda fantasma y la primera celda real, basta poner $u_{fantasma}=-u_{real}$: el promedio de los dos
 es cero.
 
-**A6. El problema de la presión y el método de proyección.** En incompresible no hay ecuación de estado para $p$. La presión
+**A6. El escalón como bloque sólido.** La malla es un rectángulo completo $[-2, L]\times[0, 1]$; las celdas con $x<0$ y
+$y<S$ se marcan como sólidas (`solido = True`). Ahí la velocidad es cero y la presión no se calcula. Sus paredes (la tapa y la
+cara vertical) se tratan igual que el piso: velocidad normal cero y celda fantasma para la tangencial.
+
+**A7. El problema de la presión y el método de proyección.** En incompresible no hay ecuación de estado para $p$. La presión
 es "lo que haga falta" para que se cumpla continuidad. El método de Chorin lo resuelve en tres pasos:
 
-1. $\mathbf u^*=\mathbf u^n+\Delta t\,[\nu\nabla^2\mathbf u-\text{convección}]$ (Navier–Stokes sin la presión).
+1. $\mathbf u^*=\mathbf u^n+\Delta t\,A$, con $A=\nu\nabla^2\mathbf u-\text{convección}$ (Navier–Stokes sin la presión).
 2. Queremos $\mathbf u^{n+1}=\mathbf u^*-\Delta t\nabla p$ con $\nabla\cdot\mathbf u^{n+1}=0$. Aplica divergencia:
    $0=\nabla\cdot\mathbf u^*-\Delta t\nabla^2p\ \Rightarrow\ \nabla^2p=\nabla\cdot\mathbf u^*/\Delta t$ (**ecuación de Poisson**).
 3. Con esa $p$, $\mathbf u^{n+1}=\mathbf u^*-\Delta t\nabla p$.
 
-Si sumas los pasos 1 y 3 te queda exactamente Navier–Stokes discretizada en el tiempo con Euler.
+Si sumas los pasos 1 y 3 te queda exactamente Navier–Stokes discretizada en el tiempo.
 
-**A7. Sistema lineal y LU.** La ecuación de Poisson discretizada da una ecuación por celda que liga cada $p$ con sus 4 vecinos:
-un sistema $A\,p=b$ con 6000 incógnitas (malla de 300×20). $A$ es casi toda ceros (**dispersa**). La factorización LU es
+**A8. Sistema lineal y LU.** La ecuación de Poisson discretizada da una ecuación por celda que liga cada $p$ con sus 4 vecinos:
+un sistema $A\,p=b$ con 6800 incógnitas (malla de 340×20). $A$ es casi toda ceros (**dispersa**). La factorización LU es
 eliminación gaussiana guardada: se hace una vez (porque $A$ no cambia) y en cada paso de tiempo sólo se sustituye.
 
-**A8. Euler explícito y condición CFL.** $u^{n+1}=u^n+\Delta t\cdot(\text{lo que calculo con }u^n)$. Es estable sólo si en
-un $\Delta t$ la información no viaja más de una celda: $\Delta t\le\Delta x/u_{max}$ (Courant–Friedrichs–Lewy). Hay otro
-límite por la difusión, $\Delta t\le Re\,\Delta x^2/4$, pero aquí es mucho más grande.
+**A9. Convección por promedio.** Para la convección necesitamos $u$ en las caras de la celda; usamos el **promedio** de los dos
+vecinos. Es lo más simple y lo más preciso: el error es proporcional a $\Delta x^2$ (al duplicar la malla, el error baja ~4 veces).
 
-**A9. GAMMA: cómo se estima un valor en la cara.** Para la convección necesitamos $u$ en las caras de la celda. El promedio de
-los dos vecinos es preciso pero, con Euler explícito, inestable cuando la convección domina. Tomar el valor de donde viene el
-flujo (*upwind*) es estable pero añade una viscosidad falsa ("difusión numérica"). Con `GAMMA = 0.5` se toma un punto
-intermedio.
+**A10. Avance en el tiempo: Euler y Adams–Bashforth.** Euler es $u^{n+1}=u^n+\Delta t\,A^n$: usa la pendiente del **inicio** del
+paso, como si fuera constante todo el paso. Con convección por promedio eso amplifica un poco los errores en cada paso y la
+solución explota (en el notebook, a los 706 pasos). Adams–Bashforth usa la pendiente a la **mitad** del paso, estimada con una
+recta que pasa por la pendiente actual y la anterior:
+$$A^{n+1/2}\approx A^n+\tfrac12(A^n-A^{n-1})=\tfrac32A^n-\tfrac12A^{n-1}.$$
+Cuesta lo mismo (la $A$ anterior ya estaba calculada) y es estable.
 
-**A10. Estado estacionario.** Arrancamos del reposo y avanzamos en el tiempo hasta que la velocidad deja de cambiar
-($\max|u^{n+1}-u^n|/\Delta t<10^{-5}$). Ese estado final es la solución estacionaria.
+**A11. Condición CFL.** En un $\Delta t$ la información no debe viajar más de una celda: $\Delta t\le\Delta x/u_{max}$
+(Courant–Friedrichs–Lewy). Usamos la mitad. En el notebook, con el límite completo, explota en 36 pasos.
 
-**A11. Reacoplamiento y esfuerzo cortante.** En la pared $\tau_w=\mu\,\partial u/\partial y$. Dentro del remolino $u<0$
+**A12. Estado estacionario.** Arrancamos del reposo y avanzamos en el tiempo hasta que la velocidad deja de cambiar
+($\max|u^{n+1}-u^n|/\Delta t<10^{-4}$). Ese estado final es la solución estacionaria.
+
+**A13. Reacoplamiento y esfuerzo cortante.** En la pared $\tau_w=\mu\,\partial u/\partial y$. Dentro del remolino $u<0$
 cerca del piso, entonces $\tau_w<0$; después del remolino $\tau_w>0$. El punto donde $\tau_w=0$ es el reacoplamiento $x_r$.
 
-**A12. Vorticidad.** $\omega=\partial v/\partial x-\partial u/\partial y$: qué tanto gira una partícula de fluido. Es
+**A14. Vorticidad.** $\omega=\partial v/\partial x-\partial u/\partial y$: qué tanto gira una partícula de fluido. Es
 grande en la capa de corte entre el chorro rápido y el remolino lento.
+
+**A15. Tinta virtual (partículas trazadoras).** Una partícula sin masa se mueve con el fluido: $d\mathbf x/dt=\mathbf u$. Es una
+ecuación de "posición = posición + velocidad × tiempo", la misma que en cinemática. Como la velocidad sólo se conoce en los
+nodos, se **interpola** (promedio pesado de los 4 nodos más cercanos). Para avanzar se usa Runge–Kutta 2: primero se calcula
+dónde estaría la partícula a medio paso y se usa la velocidad de ese punto.
 
 <div style="page-break-before: always"></div>
 
 # B. El código, bloque por bloque
+
+**Índices de Python:** `0` es el primero, `-1` el último, `-2` el penúltimo, `1:-1` "todos menos el primero y el último",
+`:I0` "desde el inicio hasta antes de I0". `a[:, None]` convierte una lista en columna para comparar contra una fila.
 
 ## B0. Librerías
 
@@ -77,10 +93,10 @@ grande en la capa de corte entre el chorro rápido y el remolino lento.
 | `import numpy as np` | Arreglos (matrices) y operaciones sobre arreglos completos sin `for`. |
 | `import scipy.sparse as sps` | Matrices dispersas: sólo guardan los números distintos de cero. |
 | `import scipy.sparse.linalg as spla` | Resolver $Ax=b$ con matrices dispersas (aquí: LU). |
-| `import matplotlib.pyplot as plt` | Gráficas. |
-| `import matplotlib.patches as patches` | Para dibujar el rectángulo del escalón. |
-| `from matplotlib.animation import ...` | Animaciones y guardarlas como GIF. |
-| `from IPython.display import HTML, display` | Mostrar la animación dentro del notebook. |
+| `import matplotlib.pyplot as plt` / `patches` | Gráficas / el rectángulo del escalón. |
+| `import subprocess` | Llamar al programa `ffmpeg` (hace los videos). |
+| `from IPython.display import Video, display` | Mostrar el video dentro del notebook. |
+| `try: import imageio_ffmpeg ...` | Si está instalado `imageio-ffmpeg`, usa su copia de ffmpeg; si no, la del sistema. |
 | `FIG = Path("figures"); FIG.mkdir(...)` | Carpeta para guardar figuras (se crea si no existe). |
 
 ## B1. Parámetros
@@ -90,69 +106,70 @@ grande en la capa de corte entre el chorro rápido y el remolino lento.
 | `RE = 200` | Número de Reynolds del caso base. Es lo que se cambia en la demo. |
 | `NY = 20` | Celdas en la altura. El ancho de celda es `dx = 1/20 = 0.05`. |
 | `L = 15.0` | Largo del canal después del escalón, en alturas. Debe ser mayor que el remolino. |
-| `H = 1.0; S = 0.5; U = 1.0` | Altura del canal, del escalón y velocidad media (adimensionales). |
-| `GAMMA = 0.5` | Mezcla promedio/upwind para la convección (A9). |
+| `HACER_VIDEOS = True` | Con `False` se saltan los videos (más rápido para la demo). |
+| `H, S, U = 1.0, 0.5, 1.0` | Altura del canal, del escalón y velocidad media (adimensionales). |
+| `LI = 2.0` | Largo del canal de entrada antes del escalón. |
+| `CFL = 0.5` | Usamos la mitad del $\Delta t$ máximo estable (A11). |
 
 ## B2. Malla: `crear_malla(NY, L)`
 
 | Línea | Qué hace |
 |---|---|
 | `dx = H / NY` | Lado de cada celda cuadrada. |
-| `NX = round(L / dx)` | Cuántas celdas caben a lo largo (300 para L = 15). |
-| `x_p = (np.arange(NX) + 0.5) * dx` | `arange(NX)` = 0, 1, …, NX−1. Sumar 0.5 y multiplicar por dx da los **centros** de celda: 0.025, 0.075, … (ahí vive $p$). |
-| `y_p = ...` | Lo mismo en $y$. |
-| `x_u = np.arange(NX + 1) * dx` | Las NX+1 **caras** verticales: 0, 0.05, …, L (ahí vive $u$). |
-| `return {...}` | Devuelve todo en un diccionario `m` para no pasar muchas variables. |
+| `NX = round((LI + L) / dx)` | Celdas a lo largo, contando el canal de entrada (340 para L = 15). |
+| `x_p = (np.arange(NX) + 0.5) * dx - LI` | `arange(NX)` = 0, 1, …, NX−1. Sumar 0.5 y multiplicar por dx da los **centros** de celda; restar `LI` hace que $x=0$ quede en el escalón. Ahí vive $p$. |
+| `y_p = (np.arange(NY) + 0.5) * dx` | Centros en $y$. |
+| `x_u = np.arange(NX + 1) * dx - LI` | Las NX+1 **caras** verticales, de $-2$ a $L$. Ahí vive $u$. |
+| `solido = (x_p[:, None] < 0) & (y_p[None, :] < S)` | Tabla NX×NY de verdadero/falso: verdadero en las celdas del escalón (A6). |
+| `I0 = round(LI / dx)` | Índice de la cara $x=0$ (la cara del escalón) en `x_u`: 40. |
+| `J0 = round(S / dx)` | Cuántas filas de celdas quedan bajo $y=S$: 10. |
 
 `perfil_entrada(y)`:
 
 | Línea | Qué hace |
 |---|---|
-| `eta = (y - S) / (H - S)` | Coordenada normalizada del canal de entrada: 0 en el borde del escalón, 1 en el techo. |
-| `np.where(y > S, 6*U*eta*(1-eta), 0.0)` | Arriba del escalón, parábola de Poiseuille; frente al escalón, 0 (es pared). El 6 sale de pedir velocidad media $U$: $\int_0^1 6\eta(1-\eta)\,d\eta=1$. El máximo es $1.5U$ en $\eta=0.5$. |
+| `eta = (y - S) / (H - S)` | Coordenada del canal de entrada: 0 en la tapa del escalón, 1 en el techo. |
+| `np.where(y > S, 6*U*eta*(1-eta), 0.0)` | Arriba del escalón, parábola de Poiseuille; abajo, 0. El 6 sale de pedir velocidad media $U$: $\int_0^1 6\eta(1-\eta)\,d\eta=1$. El máximo es $1.5U$ en $\eta=0.5$. |
 
-## B3. Matriz de presión: `matriz_presion(NX, NY, dx)`
+## B3. Matriz de presión: `matriz_presion(m)`
 
-Para cada celda escribimos el laplaciano de 5 puntos igualado a $b$:
+Para cada celda con fluido escribimos el laplaciano de 5 puntos igualado a $b$:
 $(p_E-p_P)+(p_W-p_P)+(p_N-p_P)+(p_S-p_P)=b\,\Delta x^2$. Cada término es "el flujo de presión" por una cara.
 
 | Línea | Qué hace |
 |---|---|
-| `N = NX * NY` | Número de incógnitas = número de celdas. |
-| `A = sps.lil_matrix((N, N))` | Matriz N×N vacía, en un formato fácil de llenar entrada por entrada. |
+| `A = sps.lil_matrix((NX*NY, NX*NY))` | Matriz vacía, una fila por celda, en un formato fácil de llenar. |
 | `for i ... for j ...` | Recorre todas las celdas. |
-| `k = i * NY + j` | Numera la celda (i, j) como una lista: primero toda la columna i = 0, luego i = 1, etc. El vecino de arriba es `k+1` y el de la derecha `k+NY`. |
-| `if i < NX-1: A[k,k+NY] = 1; A[k,k] -= 1` | Término $(p_E-p_P)$: +1 al vecino, −1 a la diagonal. |
-| `else: A[k,k] -= 2` | Última columna: a la derecha está la salida con $p=0$ en la cara, que está a **media** celda: $(0-p_P)/(\Delta x/2)$ → coeficiente −2. |
-| `if i > 0: ...` | Vecino izquierdo. Si `i == 0`, a la izquierda está la entrada/escalón con $\partial p/\partial x=0$: ese término es cero y simplemente no se suma. |
-| `if j < NY-1` / `if j > 0` | Vecinos de arriba/abajo. En techo y piso $\partial p/\partial y=0$, igual que antes. |
-| `A = A.tocsc() / dx**2` | Divide entre $\Delta x^2$ y cambia a un formato rápido para cálculos. |
-| `return spla.splu(A)` | Factorización LU. Devuelve un objeto con `.solve(b)` que resuelve $Ap=b$ en milisegundos. |
+| `k = i * NY + j` | Numera la celda (i, j) como una lista: primero toda la columna i = 0, luego i = 1, etc. El vecino (vi, vj) es `vi*NY + vj`. |
+| `if solido[i, j]: A[k, k] = 1; continue` | Celda del escalón: ecuación trivial "p = 0" y se pasa a la siguiente. |
+| `for vi, vj in [(i+1, j), (i-1, j), (i, j+1), (i, j-1)]` | Los 4 vecinos: derecha, izquierda, arriba, abajo. |
+| `if vi == NX: A[k, k] -= 2` | A la derecha de la última columna está la salida, con $p=0$ en la cara, que está a **media** celda: $(0-p_P)/(\Delta x/2)$ → coeficiente −2. |
+| `elif vi >= 0 and 0 <= vj < NY and not solido[vi, vj]` | El vecino existe y tiene fluido: término $(p_{vec}-p_P)$ → +1 al vecino, −1 a la diagonal. |
+| (si no se cumple ninguno) | El vecino es pared, entrada o escalón, donde $\partial p/\partial n=0$: ese término vale cero y no se suma. |
+| `spla.splu(A.tocsc() / dx**2)` | Divide entre $\Delta x^2$, cambia a formato rápido y factoriza (LU). Devuelve un objeto con `.solve(b)`. |
 
-## B4. Condiciones de frontera: `fronteras(u, v, u_entrada)`
+## B4. Condiciones de frontera: `fronteras(u, v, u_entrada, m)`
 
 Forma de los arreglos: `u` es (NX+1)×(NY+2): NX+1 caras en $x$ y NY celdas en $y$ más una fantasma abajo y otra
-arriba. `v` es (NX+2)×(NY+1): una fantasma a la izquierda y otra a la derecha.
-**Índices de Python:** `0` es el primero, `-1` el último, `-2` el penúltimo, `1:-1` "todos menos el primero y el último".
+arriba. `v` es (NX+2)×(NY+1): una fantasma a la izquierda y otra a la derecha. Por eso la fila de celdas `j` está en
+`u[:, j+1]` y la columna `i` en `v[i+1, :]`.
 
 | Línea | Qué hace |
 |---|---|
-| `u[0, 1:-1] = u_entrada` | Primera cara (x = 0), celdas reales: el perfil parabólico (0 frente al escalón). |
-| `v[0, :] = -v[1, :]` | Columna fantasma a la izquierda: espejo, para que $v=0$ en $x=0$ (A5). |
-| `u[:, 0] = -u[:, 1]` | Fila fantasma bajo el piso: espejo → $u=0$ en el piso (no deslizamiento). |
-| `u[:, -1] = -u[:, -2]` | Igual en el techo. |
-| `v[:, 0] = 0.0; v[:, -1] = 0.0` | $v$ vive justo sobre piso y techo, así que se pone 0 directamente (no atraviesa la pared). |
+| `u[0, 1:-1] = u_entrada` | Primera cara ($x=-2$): el perfil parabólico. |
+| `v[0, :] = -v[1, :]` | Columna fantasma a la izquierda: espejo → $v=0$ en la entrada (A5). |
+| `u[:I0+1, 1:J0+1] = 0.0` | Caras de $u$ dentro del escalón y en su cara vertical ($x=0$): velocidad cero (no la atraviesa). |
+| `v[1:I0+1, :J0+1] = 0.0` | Caras de $v$ dentro del escalón y en su tapa ($y=S$): cero. |
+| `u[:I0, J0] = -u[:I0, J0+1]` | La fila de $u$ justo bajo la tapa hace de fantasma: espejo → $u=0$ sobre la tapa. |
+| `v[I0, 1:J0] = -v[I0+1, 1:J0]` | La columna de $v$ justo dentro del escalón hace de fantasma: espejo → $v=0$ en la cara vertical. |
+| `u[:, 0] = -u[:, 1]` / `u[:, -1] = -u[:, -2]` | Fantasmas bajo el piso y sobre el techo: $u=0$ en las paredes. |
+| `v[:, 0] = 0.0; v[:, -1] = 0.0` | $v$ vive justo sobre piso y techo, así que se pone 0 directamente. |
 | `v[-1, :] = v[-2, :]` | Salida: copiar el vecino es $\partial v/\partial x=0$. |
 
-## B5. Convección y difusión
+## B5. Convección y difusión: `aceleracion_u(u, v, nu, dx)`
 
-`valor_en_cara(f_izq, f_der, vel)`:
-`0.5*(f_izq + f_der) - 0.5*GAMMA*np.sign(vel)*(f_der - f_izq)`.
-Con GAMMA = 0 es el promedio. Con GAMMA = 1 y `vel > 0` da `f_izq` (el valor de donde viene el flujo); con `vel < 0` da
-`f_der`. `np.sign` devuelve +1 o −1.
-
-`aceleracion_u(u, v, nu, dx)` calcula $\nu\nabla^2u-\partial(uu)/\partial x-\partial(vu)/\partial y$ en **todas** las caras
-interiores a la vez (sin `for`; NumPy opera con bloques del arreglo):
+Calcula $\nu\nabla^2u-\partial(uu)/\partial x-\partial(vu)/\partial y$ en **todas** las caras interiores a la vez (sin `for`;
+NumPy opera con bloques del arreglo):
 
 | Línea | Qué hace |
 |---|---|
@@ -160,10 +177,11 @@ interiores a la vez (sin `for`; NumPy opera con bloques del arreglo):
 | `E, W = u[2:, 1:-1], u[:-2, 1:-1]` | El mismo bloque corrido una posición a la derecha (este) o izquierda (oeste). |
 | `N, Sur = u[1:-1, 2:], u[1:-1, :-2]` | Corrido arriba (norte) o abajo (sur). |
 | `difusion = nu*(E+W+N+Sur-4*P)/dx**2` | Laplaciano de 5 puntos (A2) por la viscosidad. |
-| `u_e, u_w = 0.5*(P+E), 0.5*(W+P)` | Velocidad que atraviesa la cara este y la oeste del volumen de control de $u$. |
-| `v_n = 0.5*(v[1:-2,1:] + v[2:-1,1:])` | Velocidad vertical en la cara norte: promedio de las dos $v$ vecinas (izquierda y derecha) de la malla escalonada. |
+| `u_e, u_w = (P+E)/2, (W+P)/2` | $u$ en las caras este y oeste del volumen de control: promedio (A9). |
+| `u_n, u_s = (P+N)/2, (Sur+P)/2` | $u$ en las caras norte y sur. |
+| `v_n = (v[1:-2,1:] + v[2:-1,1:])/2` | Velocidad vertical que cruza la cara norte: promedio de las dos $v$ vecinas de la malla escalonada. |
 | `v_s = ...` | Lo mismo en la cara sur. |
-| `conveccion = (u_e*cara_e - u_w*cara_w)/dx + (v_n*cara_n - v_s*cara_s)/dx` | $\partial(uu)/\partial x+\partial(vu)/\partial y$ como "lo que sale menos lo que entra" (A3): velocidad que cruza la cara × valor de $u$ en esa cara. |
+| `conveccion = (u_e*u_e - u_w*u_w)/dx + (v_n*u_n - v_s*u_s)/dx` | "Lo que sale menos lo que entra" (A3): velocidad que cruza la cara × $u$ en esa cara. |
 | `return difusion - conveccion` | Todo el lado derecho de Navier–Stokes **excepto** la presión. |
 
 `aceleracion_v` es lo mismo para la ecuación de $y$, con los papeles de $u$ y $v$ intercambiados.
@@ -173,56 +191,97 @@ interiores a la vez (sin `for`; NumPy opera con bloques del arreglo):
 | Línea | Qué hace |
 |---|---|
 | `nu = 1.0 / Re` | Viscosidad adimensional (A1). |
-| `m = crear_malla(NY, L)` | Arma la malla. |
-| `dt = 0.5 * dx / 1.5` | Mitad del límite CFL con $u_{max}=1.5$ (A8). Para NY = 20: 0.0167. |
-| `resolver_p = matriz_presion(...)` | Arma y factoriza la matriz de Poisson una sola vez. |
+| `dt = CFL * dx / 1.5` | Mitad del límite CFL con $u_{max}=1.5$. Para NY = 20: 0.0167. |
+| `resolver_p = matriz_presion(m)` | Arma y factoriza la matriz de Poisson una sola vez. |
 | `u = np.zeros(...); v = np.zeros(...)` | Condición inicial: reposo. |
-| `fronteras(u, v, u_entrada)` | Impone la entrada y las paredes desde el inicio. |
+| `Au_ant = Av_ant = None` | Todavía no hay aceleración "anterior". |
 | `while t < t_max:` | Avanza paso a paso. |
 | `u_viejo = u.copy()` | Guarda $u^n$ para medir cuánto cambió. |
-| **Paso 1** `u_est[1:-1,1:-1] += dt*aceleracion_u(...)` | Euler: $u^*=u^n+\Delta t\,(\text{difusión}-\text{convección})$. |
-| `u_est[-1,1:-1] = u_est[-2,1:-1]` | Salida: $\partial u/\partial x=0$. |
+| **Paso 1** `Au, Av = aceleracion_u(...), aceleracion_v(...)` | Aceleración de ahora, $A^n$. |
+| `if Au_ant is None or not ab2: Au_ant, Av_ant = Au, Av` | En el primer paso no hay anterior: se usa la actual (queda Euler). Con `ab2=False` se fuerza Euler siempre (para la prueba de 5.3). |
+| `u_est[1:-1,1:-1] += dt*(1.5*Au - 0.5*Au_ant)` | Adams–Bashforth (A10): $u^*=u^n+\Delta t(\tfrac32A^n-\tfrac12A^{n-1})$. |
+| `Au_ant, Av_ant = Au, Av` | La de ahora será la "anterior" en el siguiente paso. |
+| `u_est[-1,1:-1] = u_est[-2,1:-1]` y `fronteras(...)` | Salida $\partial u/\partial x=0$ y paredes, antes de medir la divergencia. |
 | **Paso 2** `div = (u_est[1:]-u_est[:-1] + v_est[:,1:]-v_est[:,:-1])/dx` | Divergencia en cada celda: (sale por la derecha − entra por la izquierda) + (sale por arriba − entra por abajo). Es lo que "sobra" o "falta" de masa. |
+| `div[m["solido"]] = 0.0` | Dentro del escalón no hay nada que corregir. |
 | `p = resolver_p.solve((div/dt).ravel()).reshape(NX, NY)` | Resuelve $\nabla^2p=\nabla\cdot u^*/\Delta t$. `ravel` hace la matriz una lista (vector $b$) y `reshape` la regresa a matriz. |
 | **Paso 3** `u[1:-1,1:-1] -= dt*(p[1:]-p[:-1])/dx` | $u=u^*-\Delta t\,\partial p/\partial x$; cada cara usa la presión de sus dos celdas (malla escalonada). |
 | `u[-1,1:-1] -= dt*(0.0-p[-1])/(dx/2)` | En la cara de salida la presión es 0 y el centro de la última celda está a $\Delta x/2$. |
 | `v[1:-1,1:-1] -= dt*(p[:,1:]-p[:,:-1])/dx` | Igual para $v$. |
-| `fronteras(u, v, u_entrada)` | Actualiza las fantasmas con las velocidades nuevas. |
+| `fronteras(u, v, ...)` | Vuelve a poner paredes, escalón y fantasmas con las velocidades nuevas. |
 | `cambio = np.max(np.abs(u-u_viejo))/dt` | Qué tan rápido cambia todavía el flujo (≈ $\partial u/\partial t$ máximo). |
-| `if not np.isfinite(cambio) or cambio > 1e3` | Si aparece infinito/NaN o crece mucho, la solución explotó (Δt demasiado grande). |
+| `if fotos_cada and n % fotos_cada == 0: fotos.append(...)` | Guarda una "foto" del flujo cada cierto número de pasos (para el video). `float32` ocupa la mitad de memoria. |
+| `if not np.isfinite(cambio) or cambio > 1e3` | Si aparece infinito/NaN o crece mucho, la solución explotó. |
 | `if cambio < tol and t > 5` | Estado estacionario: se detiene. `t > 5` evita parar al principio. |
-| `r = dict(...)` | Junta todo el resultado en un diccionario. |
-| `r["xr"] = reacoplamiento(r)` | Calcula el largo del remolino. |
+| `r["xr"] = reacoplamiento(m, u)` | Calcula el largo del remolino. |
 
 ## B7. Resultados
 
-`reacoplamiento(r)`:
+`reacoplamiento(m, u)`:
 
 | Línea | Qué hace |
 |---|---|
-| `u_piso = r["u"][:, 1]` | $u$ en la primera fila de celdas sobre el piso. Como $u_{pared}=0$, su signo es el de $\tau_w=\mu\,u/(\Delta y/2)$ (A11). |
+| `x = m["x_u"][m["I0"]:]`, `u_piso = u[m["I0"]:, 1]` | Sólo después del escalón: $u$ en la primera fila de celdas sobre el piso. Como $u_{pared}=0$, su signo es el de $\tau_w$ (A13). |
 | `i_min = np.argmin(u_piso)` | Posición del flujo de regreso más fuerte (centro del remolino). |
-| `for i in range(i_min, ...)` y `if u_piso[i] < 0 <= u_piso[i+1]` | Busca aguas abajo el primer cambio de signo de − a +. Empezar en `i_min` evita confundirse con un remolino diminuto en la esquina del escalón. |
+| `for i in range(i_min, ...)` y `if u_piso[i] < 0 <= u_piso[i+1]` | Busca aguas abajo el primer cambio de signo de − a +. Empezar en `i_min` evita confundirse con un remolino diminuto en la esquina. |
 | `return x[i] - u_piso[i]*(x[i+1]-x[i])/(u_piso[i+1]-u_piso[i])` | Interpolación lineal: el punto entre los dos nodos donde la recta cruza cero. |
 
-`burbuja_superior(r)`: `np.where(r["u"][:, -2] < 0)[0]` da los índices donde la $u$ junto al techo es negativa; el primero
+`burbuja_superior(m, u)`: `np.where(u[:, -2] < 0)[0]` da los índices donde la $u$ junto al techo es negativa; el primero
 y el último son inicio y fin del remolino superior.
 
-`velocidad_en_centros(r)`: promedia las dos $u$ (izquierda/derecha) y las dos $v$ (abajo/arriba) de cada celda para tener
-todo en el mismo punto y poder graficar.
+`velocidad_en_centros(m, u, v)`: promedia las dos $u$ (izquierda/derecha) y las dos $v$ (abajo/arriba) de cada celda para
+tener todo en el mismo punto y poder graficar. Dentro del escalón pone `NaN` ("no es un número"), que no se dibuja.
 
-`divergencia_maxima(r)`: la misma divergencia del paso 2 con la velocidad final. Debe dar ~$10^{-15}$ (cero de la computadora).
+`vorticidad(m, u, v)`: `(v[1:, :] - v[:-1, :])/dx - (u[:, 1:] - u[:, :-1])/dx`. En cada **esquina** de celda hay dos $v$
+(izquierda y derecha) y dos $u$ (abajo y arriba): restarlas da $\partial v/\partial x$ y $\partial u/\partial y$ directamente.
+
+`divergencia_maxima(r)`: la misma divergencia del paso 2 con la velocidad final, en las celdas con fluido. Debe dar
+~$10^{-14}$ (cero de la computadora).
 
 ## B8. Gráficas
 
-* `graficar_campos`: `contourf` colorea la magnitud $\sqrt{u^2+v^2}$ (`np.hypot`); `streamplot` dibuja líneas de corriente;
-  la vorticidad es $\partial v/\partial x-\partial u/\partial y$ con diferencias centradas
-  $(f_{i+1}-f_{i-1})/(2\Delta x)$; la línea roja punteada marca $x_r$.
+* `graficar_campos`: `contourf` colorea la magnitud $\sqrt{u^2+v^2}$ (`np.hypot`); `streamplot` dibuja líneas de corriente
+  (`nan_to_num` cambia los `NaN` del escalón por 0); la línea roja punteada marca $x_r$.
 * `graficar_perfiles`: en cada estación $x_s$ dibuja la curva $x_s+0.8\,u(y)$, o sea el perfil "parado" en esa posición.
-* `animar`: toma las fotos guardadas cada 15 pasos y dibuja un cuadro por foto.
 * En 5.1, `contourf(..., uc.T, levels=[-10, 0], colors="red")` pinta de rojo donde $u<0$ (flujo de regreso). `.T` transpone
   porque `contourf` quiere las filas en $y$.
-* El esfuerzo cortante en el piso es `nu * u[:,1] / (0.5*dx)`: $\nu\,\partial u/\partial y$ con $u_{pared}=0$ a media celda.
+* El esfuerzo cortante en el piso es `nu * u[I0:,1] / (0.5*dx)`: $\nu\,\partial u/\partial y$ con $u_{pared}=0$ a media celda.
+
+## B9. Video: tinta virtual
+
+`interpolar(f, x0, y0, dx, x, y)` (A15):
+
+| Línea | Qué hace |
+|---|---|
+| `a, b = (x - x0)/dx, (y - y0)/dx` | Posición de cada partícula medida en celdas (por ejemplo, 12.3 celdas a la derecha). |
+| `i = np.clip(a.astype(int), ...)` | Parte entera: el nodo de abajo a la izquierda (`clip` evita salirse del arreglo). |
+| `a, b = a - i, b - j` | Parte fraccionaria: qué tan lejos está dentro de la celda, de 0 a 1. |
+| `return (1-a)*(1-b)*f[i,j] + ...` | Promedio de los 4 nodos, cada uno pesado por qué tan cerca está la partícula. |
+
+`class Tinta` guarda las posiciones `x, y` y un código de color `c` de todas las partículas:
+
+| Parte | Qué hace |
+|---|---|
+| `ALTURAS = S + (H-S)*[...]` | Alturas de los 9 inyectores en la entrada. |
+| `__init__`: `np.meshgrid(...)` | Llena el canal de partículas cada 0.025 (fluido inicial), quitando las del escalón. |
+| `cuadro = (floor(x/0.25) + floor(y/0.25)) % 2` | 0 o 1 según la casilla del tablero de ajedrez: dos tonos de gris (`c` = −1 o −2). |
+| `velocidad(...)` | Interpola $u$ y $v$; cada una con su propio origen porque viven en caras distintas de la malla escalonada. |
+| `avanzar(u, v, dt)`: `sub = ceil(dt/0.025)` | Divide el intervalo entre fotos en sub-pasos pequeños. |
+| `ux, uy = velocidad(..., x + h/2*ux, ...)` | Runge–Kutta 2: velocidad en el punto de medio paso. |
+| `self.x = self.x + h*ux` | Mueve las partículas: posición + velocidad × tiempo. |
+| `np.clip(...)` y `np.where((x<0)&(y<S), ...)` | No dejar que una partícula atraviese el piso, el techo o el escalón. |
+| `np.append(...)` | Suelta 9 partículas nuevas en la entrada, una por inyector; `c` = número de inyector (+10 en los segundos impares, para el tono oscuro). |
+| `vivas = self.x < self.x_max + 0.2` | Borra las que ya salieron de la vista. |
+| `colores()` | Convierte el código `c` en color: colormap `turbo` por inyector, más oscuro si `c ≥ 10`, gris para el fluido inicial. |
+
+`animar(casos, archivo, x_max)`: arma la figura de 1920×1080 (franjas de tinta, vorticidad si es un solo caso, y abajo
+$x_r(t)$ y $u$ junto al piso). La función interna `cuadro(q)` dibuja cada cuadro: avanza la tinta hasta el tiempo de la
+foto, redibuja el borde del remolino (`contour` de $u=0$), mueve la marca ▼ a $x_r$ y agrega un punto a la curva $x_r(t)$.
+Las fotos se eligen para hacer **cámara lenta** al principio (todas hasta $t=10$, después una de cada 2 y luego una de cada 4).
+`FFMpegWriter` junta los cuadros en un MP4.
+
+`mostrar_video` hace una copia de 960 px con ffmpeg y la incrusta en el notebook. `secuencia` usa la misma tinta para hacer
+la figura de fotos fijas del reporte.
 
 <div style="page-break-before: always"></div>
 
@@ -234,8 +293,12 @@ Se calcula en el paso 2 justo para eso.
 **¿De dónde sale la ecuación de Poisson?** De aplicar divergencia a $u^{n+1}=u^*-\Delta t\nabla p$ y pedir
 $\nabla\cdot u^{n+1}=0$.
 
-**¿Qué pasa si aumento Δt?** Mientras cumpla CFL, se llega al mismo resultado en menos pasos. Arriba de $\Delta x/u_{max}$
-la solución explota (en el notebook: Δt = 0.045 explota en ~20 pasos).
+**¿Qué es Adams–Bashforth y por qué no Euler?** Euler usa la aceleración del inicio del paso; Adams–Bashforth estima la de
+la mitad del paso con $\tfrac32A^n-\tfrac12A^{n-1}$. Con convección por promedio, Euler explota (lo mostramos: 706 pasos);
+Adams–Bashforth no, y cuesta lo mismo.
+
+**¿Qué pasa si aumento Δt?** Mientras sea estable, se llega al mismo resultado en menos pasos. En el límite CFL
+($\Delta x/u_{max}=0.033$) la solución explota en 36 pasos.
 
 **¿Por qué crece el remolino al bajar la viscosidad?** El chorro transmite su momento hacia el piso por difusión viscosa;
 con menos viscosidad eso tarda más mientras la convección lo lleva más lejos, así que se vuelve a pegar más adelante.
@@ -246,8 +309,14 @@ junto a la pared es lento y no tiene inercia para avanzar contra ese aumento de 
 **¿Por qué aparece un remolino arriba para Re ≥ 400?** El gradiente adverso también actúa sobre la capa límite del techo; con
 poca viscosidad ésta también se separa.
 
-**¿Cómo sabes que el resultado es correcto?** (1) La divergencia final es ~$10^{-15}$. (2) Al refinar la malla el resultado
-converge. (3) Coincide con la literatura con diferencias menores a 3.5 %.
+**¿Cómo sabes que el resultado es correcto?** (1) La divergencia final es ~$10^{-14}$. (2) Al duplicar la malla el resultado
+cambia menos de 1 %. (3) Coincide con la literatura dentro de 2 % para Re de 200 a 600.
+
+**¿Por qué hay un canal antes del escalón?** Para que el perfil de velocidad pueda deformarse antes de la esquina, como en un
+canal real. Sin él la burbuja sale ~8 % más larga a Re = 200 (lo probamos) y no se compara bien con la literatura.
+
+**¿Qué muestra la tinta del video?** Partículas que se mueven con el fluido. El fluido gris atrapado en la burbuja nunca sale:
+eso es una zona de recirculación. La tinta de color muestra el vórtice de arranque y cómo el chorro rodea el remolino.
 
 **¿Qué condición de salida usaste y por qué?** $\partial u/\partial x=0$ y $p=0$: suponemos que el flujo ya está
 desarrollado (parábola) y fijamos la referencia de presión. Por eso el canal debe ser más largo que el remolino.
@@ -257,9 +326,6 @@ largo: suponemos que el fluido viene de un canal donde ya se desarrolló.
 
 **¿Por qué la velocidad máxima final es 0.75?** Conservación de masa: el caudal es el mismo ($U\cdot h$) pero el canal
 mide el doble, así que la velocidad media baja a la mitad (0.5) y el máximo de la parábola es 1.5 × 0.5 = 0.75.
-
-**¿Qué es GAMMA?** Cómo se estima la velocidad en la cara de una celda para la convección: promedio de los vecinos
-(preciso pero inestable) o el valor de donde viene el flujo (estable pero difusivo). Usamos una mezcla, 0.5.
 
 **¿Por qué malla escalonada?** Para que la fuerza de presión sobre cada velocidad use dos presiones vecinas directas y no
 aparezcan oscilaciones en zig-zag de la presión.

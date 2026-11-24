@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 node_modules/
 presentacion/eq/
+figures/*_chico.mp4
