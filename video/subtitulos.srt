@@ -1,0 +1,123 @@
+1
+00:00:00,350 --> 00:00:03,139
+Flujo laminar sobre un escalón descendente.
+
+2
+00:00:03,339 --> 00:00:05,948
+Proyecto final de Mecánica de Fluidos.
+
+3
+00:00:06,583 --> 00:00:11,517
+Un fluido viaja por un canal y encuentra un escalón: el canal se ensancha al doble.
+
+4
+00:00:11,717 --> 00:00:18,415
+El fluido se frena, la presión sube, y el fluido lento junto a la pared no puede avanzar contra ese gradiente adverso.
+
+5
+00:00:18,615 --> 00:00:23,960
+Se separa en la esquina, forma un remolino, y vuelve a tocar el piso en el punto de reacoplamiento.
+
+6
+00:00:24,617 --> 00:00:29,157
+El modelo es flujo bidimensional, incompresible, newtoniano y laminar.
+
+7
+00:00:29,357 --> 00:00:35,668
+Resolvemos continuidad y Navier Stokes en forma adimensional, con un solo parámetro: el número de Reynolds.
+
+8
+00:00:35,868 --> 00:00:38,458
+Bajar la viscosidad es subir Reynolds.
+
+9
+00:00:39,117 --> 00:00:42,373
+En la entrada imponemos el perfil parabólico de Poiseuille.
+
+10
+00:00:42,573 --> 00:00:45,770
+En las paredes y en el escalón, no deslizamiento.
+
+11
+00:00:45,970 --> 00:00:50,645
+En la salida, flujo desarrollado y presión cero. El fluido parte del reposo.
+
+12
+00:00:51,283 --> 00:00:54,219
+Cada paso de tiempo se resuelve en tres pasos.
+
+13
+00:00:54,419 --> 00:00:58,691
+Uno: una velocidad de prueba sin presión, con Adams Bashforth.
+
+14
+00:00:58,891 --> 00:01:03,665
+Dos: una ecuación de Poisson para la presión que hace cumplir la continuidad.
+
+15
+00:01:03,865 --> 00:01:07,634
+Tres: corregir la velocidad con el gradiente de presión.
+
+16
+00:01:08,283 --> 00:01:12,422
+Así corremos el código en Jupyter. Los parámetros están al inicio.
+
+17
+00:01:13,083 --> 00:01:21,413
+Cada función hace una tarea: la malla, la matriz de presión, las fronteras, la convección y difusión, y el ciclo de tres pasos.
+
+18
+00:01:22,050 --> 00:01:26,754
+El caso base, con Reynolds doscientos, converge en unos tres segundos.
+
+19
+00:01:26,954 --> 00:01:31,429
+La masa se conserva, y el remolino mide cuatro punto nueve alturas de escalón.
+
+20
+00:01:32,083 --> 00:01:35,500
+Probamos otro parámetro: Reynolds cuatrocientos.
+
+21
+00:01:39,150 --> 00:01:43,795
+Con menos viscosidad, el remolino crece a ocho punto tres alturas de escalón.
+
+22
+00:01:46,150 --> 00:01:49,501
+Esta es la simulación del arranque, con tinta virtual.
+
+23
+00:01:49,701 --> 00:01:53,256
+La capa de corte se enrolla en un vórtice que viaja aguas abajo.
+
+24
+00:01:53,456 --> 00:01:59,696
+El remolino crece hasta su largo final, y el fluido gris queda atrapado girando: eso es la recirculación.
+
+25
+00:02:00,350 --> 00:02:07,719
+Al bajar la viscosidad el remolino se alarga: de dos punto ocho alturas de escalón en Reynolds cien, a diez en Reynolds seiscientos.
+
+26
+00:02:07,919 --> 00:02:11,842
+Desde Reynolds cuatrocientos aparece un segundo remolino en el techo.
+
+27
+00:02:12,483 --> 00:02:16,353
+Al duplicar la malla, el resultado cambia menos de uno por ciento.
+
+28
+00:02:16,553 --> 00:02:22,948
+El paso de tiempo no cambia el resultado mientras sea estable; en el límite de Courant, la solución explota.
+
+29
+00:02:23,583 --> 00:02:29,495
+Frente a la literatura, la diferencia es de dos por ciento o menos entre Reynolds doscientos y seiscientos.
+
+30
+00:02:30,150 --> 00:02:37,997
+En resumen: resolvimos Navier Stokes, reprodujimos la separación, la recirculación y el reacoplamiento, y validamos el resultado.
+
+31
+00:02:38,197 --> 00:02:39,286
+Gracias.

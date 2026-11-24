@@ -9,7 +9,7 @@ lang: es
 <div class="video">
 **Video (YouTube):** <https://www.youtube.com/shorts/1UjPvbtYBLU>  
 **Código:** `escalon_descendente.ipynb` (Ejecutar todo: ~13 min con videos, ~5 min sin ellos)  
-**Videos de la simulación:** `figures/arranque_re200.mp4` y `figures/comparacion_re.mp4`
+**Videos de la simulación:** `figures/arranque_re200.mp4` y `figures/comparacion_re.mp4` · **Video del proyecto (2:39):** `video/video_proyecto.mp4`
 </div>
 
 ## Resumen
