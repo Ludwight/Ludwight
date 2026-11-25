@@ -33,4 +33,4 @@ Para la demo en vivo, cambiar `RE` (y si se quiere `NY`, `L`) en el bloque 0 del
 
 Error de malla con 20 celdas/H: < 1 % (NY = 10 / 20 / 40 → 4.75 / 4.91 / 4.95 a Re = 200).
 
-Regenerar los documentos: `python reporte/build_pdf.py`, `python guia/build_pdf.py`, `cd presentacion `python presentacion/build_slides.py``python presentacion/build_slides.py` npm install `python presentacion/build_slides.py``python presentacion/build_slides.py` python render_eqs.py `python presentacion/build_slides.py``python presentacion/build_slides.py` node build_deck.js `python presentacion/build_slides.py``python presentacion/build_slides.py` python transiciones.py presentacion.pptx`.
+Regenerar los documentos: `python reporte/build_pdf.py`, `python guia/build_pdf.py`, y la presentación con `cd presentacion && npm install && python render_eqs.py && node build_deck.js && python transiciones.py presentacion.pptx`.
