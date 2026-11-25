@@ -77,6 +77,12 @@ flujo con partículas trazadoras (tinta virtual).
 % ================================================================
 \section{Introducción y descripción del fenómeno}
 
+En esta simulación se modela numéricamente el \textbf{flujo laminar, bidimensional e incompresible de un fluido
+newtoniano sobre un escalón descendente}: un canal que se ensancha bruscamente al doble de su altura. El objetivo es
+predecir la \textbf{separación del flujo} en la esquina, la \textbf{zona de recirculación} que se forma detrás del escalón
+y la distancia a la que el flujo vuelve a pegarse a la pared (\textbf{longitud de reacoplamiento} $x_r$), y estudiar cómo
+cambian con la viscosidad del fluido.
+
 El escalón descendente (\emph{backward-facing step}, BFS) es el caso de prueba clásico de flujo separado: la geometría
 es simple, pero el flujo tiene separación, recirculación, capa de corte libre y reacoplamiento, los mismos mecanismos que
 aparecen en difusores, cámaras de combustión, intercambiadores y la parte trasera de vehículos.
@@ -111,6 +117,40 @@ x^*=\frac{x}{H},\qquad \vu^*=\frac{\vu}{U},\qquad t^*=\frac{tU}{H},\qquad p^*=\f
 es decir, $\Rey$ está basado en el diámetro hidráulico del canal de entrada (definición de Armaly et al.\ y de
 Gartling \cite{armaly,gartling}). Con $U=H=1$, $\nu=1/\Rey$: \textbf{variar la viscosidad es variar $\Rey$}. En lo que
 sigue se omiten los asteriscos.
+
+\subsection{Variables y parámetros del modelo}
+
+\begin{table}[H]
+\centering\small
+\caption{Variables, parámetros y valores usados. La última columna es el nombre en el código.}
+\label{tab:parametros}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Símbolo & Significado & Valor (adimensional) & Código\\
+\midrule
+\multicolumn{4}{@{}l}{\emph{Variables independientes e incógnitas}}\\
+$x,\ y,\ t$ & posición y tiempo & $-2\le x\le L$, $0\le y\le1$ & \texttt{x\_p}, \texttt{y\_p}, \texttt{t}\\
+$u,\ v$ & componentes de la velocidad & incógnitas & \texttt{u}, \texttt{v}\\
+$p$ & presión (entre $\rho$) & incógnita & \texttt{p}\\
+\midrule
+\multicolumn{4}{@{}l}{\emph{Parámetros físicos}}\\
+$\Rey=UH/\nu$ & número de Reynolds (único parámetro) & 100 a 600 & \texttt{RE}\\
+$\nu=\mu/\rho$ & viscosidad cinemática & $1/\Rey$ & \texttt{nu}\\
+$U$ & velocidad media de entrada & 1 & \texttt{U}\\
+$H,\ S,\ h$ & altura del canal, del escalón y de la entrada & $1,\ 0.5,\ 0.5$ & \texttt{H}, \texttt{S}\\
+$L_I,\ L$ & largo del canal de entrada y aguas abajo & $2$; 15 a 25 & \texttt{LI}, \texttt{L}\\
+\midrule
+\multicolumn{4}{@{}l}{\emph{Parámetros numéricos}}\\
+$N_y,\ \Delta x$ & celdas por altura y tamaño de celda & $20$, $0.05$ & \texttt{NY}, \texttt{dx}\\
+$\Delta t$ & paso de tiempo, $\text{CFL}\cdot\Delta x/1.5$ & $0.0167$ & \texttt{dt}, \texttt{CFL}\\
+tol & criterio de estado estacionario & $10^{-4}$ & \texttt{tol}\\
+\midrule
+\multicolumn{4}{@{}l}{\emph{Resultados que se miden}}\\
+$x_r$ & longitud de reacoplamiento (se reporta $x_r/S$) & --- & \texttt{reacoplamiento}\\
+$\tau_w,\ \omega$ & esfuerzo cortante en la pared y vorticidad & --- & \texttt{vorticidad}\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Ecuaciones de gobierno}
 
@@ -264,9 +304,61 @@ $\dd\mathbf x/\dd t=\vu(\mathbf x,t)$, integradas con Runge–Kutta de segundo o
 velocidad. Hay 9 inyectores en la entrada (cada uno de un color, con el tono alternando cada $1\,H/U$ para marcar el
 tiempo) y el fluido inicial se marca como un tablero de ajedrez gris.
 
+\subsection{Estructura del código en Python}\label{sec:codigo}
+
+El código está en un solo notebook, \texttt{escalon\_descendente.ipynb}, escrito desde cero con \texttt{numpy} (arreglos
+y operaciones vectorizadas), \texttt{scipy.sparse} (matriz de Poisson y factorización LU) y \texttt{matplotlib}
+(gráficas y videos). Se ejecuta completo con \emph{Ejecutar todo} y está organizado en bloques:
+
+\begin{enumerate}[label=\textbf{\arabic*.}, start=0]
+  \item \textbf{Librerías y parámetros}: \texttt{RE}, \texttt{NY}, \texttt{L} y las constantes de la geometría
+    (tabla~\ref{tab:parametros}).
+  \item \textbf{La física}: ecuaciones, condiciones de frontera y supuestos (texto).
+  \item \textbf{El método numérico} en tres pasos (texto).
+  \item \textbf{El código}, función por función (tabla~\ref{tab:funciones}).
+  \item \textbf{Caso base} y videos del arranque.
+  \item \textbf{Análisis paramétrico}: viscosidad, malla y paso de tiempo.
+  \item \textbf{Validación} contra la literatura y conclusiones.
+\end{enumerate}
+
+\begin{table}[H]
+\centering\small
+\caption{Funciones del notebook y la parte del método que implementa cada una.}
+\label{tab:funciones}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Función & Qué implementa\\
+\midrule
+\texttt{crear\_malla} & Malla MAC de $-L_I$ a $L$; marca las celdas sólidas del escalón\\
+\texttt{perfil\_entrada} & Perfil de Poiseuille $u=6U\eta(1-\eta)$\\
+\texttt{matriz\_presion} & Matriz de Poisson (Neumann/Dirichlet) y su factorización LU\\
+\texttt{fronteras} & Condiciones de frontera con celdas fantasma\\
+\texttt{aceleracion\_u}, \texttt{aceleracion\_v} & $\mathbf A$: difusión de 5 puntos y convección centrada conservativa\\
+\texttt{simular} & Ciclo de tres pasos \eqref{eq:pred}--\eqref{eq:corr}, CFL y criterio de convergencia\\
+\texttt{reacoplamiento}, \texttt{burbuja\_superior} & $x_r$ y la burbuja del techo por cambio de signo de $u$\\
+\texttt{vorticidad}, \texttt{divergencia\_maxima} & $\omega$ en las esquinas; verificación de $\nabla\cdot\vu\approx0$\\
+\texttt{graficar\_campos}, \texttt{animar} & Figuras y videos (tinta virtual)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La función central es \texttt{simular(Re, NY, L, dt)}: arma la malla y la matriz, impone la condición inicial y repite
+los pasos \eqref{eq:pred}--\eqref{eq:corr} hasta cumplir el criterio de estado estacionario o detectar que la solución
+diverge. Cada análisis paramétrico es una llamada a esta función con otros argumentos. El código completo de las
+funciones principales está en el anexo~\ref{sec:anexo-codigo}.
+
 % ================================================================
 \section{Resultados: caso base \texorpdfstring{$\Rey=200$}{Re = 200}}
 
+\subsection{Ejecución del código}
+El caso base se corre con \texttt{base = simular(RE, NY=NY, L=L)}. La salida del notebook es:
+\begin{lstlisting}[language={}, numbers=none]
+Re =  200 | NY =  20 | dt = 0.0167 | converge  en t =   43.5 (2608 pasos) | x_r/S = 4.91
+Divergencia máxima = 8.1e-15   (~ 0: la masa se conserva)
+Reacoplamiento: x_r = 2.46 H = 4.91 alturas de escalón
+\end{lstlisting}
+
+\subsection{Campos estacionarios}
 Con 20 celdas por $H$ (6400 celdas con fluido) y $\Delta t=0.0167$, el estado estacionario se alcanza en
 $t=43.5\,H/U$ (2608 pasos, $\sim$\SI{3}{s} de CPU). El reacoplamiento ocurre en $x_r=2.46H$ ($x_r/S=4.91$) y la
 divergencia máxima final es \num{8.1e-15}.
@@ -357,6 +449,19 @@ lento, cuando aparece la burbuja superior: ésta estrecha el paso del flujo prin
 crecimiento de la burbuja inferior. El mínimo de $\tau_w$ dentro de la burbuja se hace menos negativo con $\Rey$ porque
 $\tau_w\propto\nu$. El tiempo para llegar al estado estacionario también crece con $\Rey$ (de $t=19.9$ a $t=289$): el
 transitorio lo controla la difusión viscosa.
+
+\subsection{Velocidad de entrada}
+
+En forma adimensional la velocidad de entrada no es un parámetro independiente: $U$ sólo aparece en $\Rey=UH/\nu$.
+\textbf{Aumentar la velocidad de entrada con la misma viscosidad es lo mismo que aumentar $\Rey$} (similitud dinámica):
+duplicar $U$ duplica $\Rey$ y produce el mismo flujo adimensional que reducir $\nu$ a la mitad; lo único que cambia es la
+escala de tiempo $H/U$. Por eso el barrido de la tabla~\ref{tab:re} es también un barrido en velocidad. Como ejemplo,
+para agua ($\nu\approx\SI{1e-6}{m^2/s}$) en un canal de $H=\SI{1}{cm}$, $\Rey=100$ a 600 corresponde a
+$U=\Rey\,\nu/H=\SI{1}{cm/s}$ a \SI{6}{cm/s}: el remolino pasa de $x_r/S=2.84$ a $10.06$.
+
+En la estabilidad, mayor velocidad (mayor $\Rey$) no reduce el $\Delta t$ adimensional permitido por el CFL, porque la
+velocidad máxima sigue siendo $1.5U$; sí aumenta el límite difusivo ($\Delta t_{\text{Fo}}\propto\Rey$) y, sobre todo,
+alarga el transitorio: de 1194 pasos a $\Rey=100$ a \num{17338} a $\Rey=600$.
 
 \subsection{Malla}
 
@@ -455,20 +560,52 @@ en $\Rey=100$, ocurre donde la burbuja es más corta y más sensible al perfil q
 
 % ================================================================
 \section{Conclusiones}
+
+\subsection{Interpretación física}
 \begin{enumerate}
-  \item Se resolvió Navier–Stokes 2D con el método de proyección (velocidad de prueba $\to$ presión $\to$ corrección); la
-    masa se conserva a precisión de máquina.
-  \item La simulación muestra la separación en la esquina, la recirculación, el reacoplamiento y, para $\Rey\gtrsim400$,
-    la burbuja secundaria en el techo.
-  \item Bajar la viscosidad (subir $\Rey$) alarga la burbuja: $x_r/S$ pasa de 2.8 a 10 entre $\Rey=100$ y 600.
-  \item Con convección centrada y Adams–Bashforth el método es de segundo orden (orden observado 2.3): con 20 celdas/$H$
-    el error de malla es menor a \SI{1}{\percent}.
-  \item $\Delta t$ no cambia la solución estacionaria si es estable; en el límite CFL el método diverge, y Euler explícito
-    diverge siempre con este esquema.
-  \item La tinta virtual muestra cómo se forma la burbuja: vórtice de arranque, separaciones transitorias en el techo y
-    fluido atrapado que recircula sin salir.
-  \item Coincidencia con la literatura dentro de \SI{2}{\percent} para $200\le\Rey\le600$.
+  \item La separación en la esquina se explica por el \textbf{gradiente de presión adverso}: al ensancharse el canal el
+    fluido se frena y la presión sube hasta $x\approx3H$; el fluido lento junto a la pared no puede avanzar contra ese
+    aumento y se despega.
+  \item La longitud del remolino la fija la competencia entre \textbf{convección y difusión viscosa}: con menos viscosidad
+    (mayor $\Rey$) el chorro transmite su momento hacia el piso más lentamente mientras la convección lo lleva más lejos,
+    así que $x_r/S$ crece de 2.84 a 10.06 entre $\Rey=100$ y 600, casi linealmente hasta $\Rey\approx400$.
+  \item Desde $\Rey\approx400$ también se separa la capa límite del techo; esa \textbf{burbuja secundaria} estrecha el paso
+    del chorro, lo empuja hacia abajo y frena el crecimiento de la burbuja principal.
+  \item La recirculación es una región cerrada: el fluido que queda atrapado en ella gira sin salir (tinta virtual), y el
+    reacoplamiento coincide con $\tau_w=0$.
+  \item Por continuidad la velocidad máxima baja de $1.5U$ a $0.75U$ aguas abajo, donde el perfil vuelve a ser parabólico.
 \end{enumerate}
+
+\subsection{Alcances}
+\begin{itemize}
+  \item El código resuelve Navier–Stokes 2D incompresible con el método de proyección, conserva la masa a precisión de
+    máquina ($\sim10^{-15}$) y es de segundo orden en el espacio (orden observado 2.3; error de malla $<\SI{1}{\percent}$
+    con 20 celdas/$H$).
+  \item Reproduce el transitorio desde el reposo y el estado estacionario para cualquier $\Rey$ entre 100 y 600 cambiando un
+    solo parámetro, con diferencias de \SI{2}{\percent} o menos frente a la literatura para $200\le\Rey\le600$.
+  \item El análisis de estabilidad es cuantitativo: dentro del límite CFL el resultado no depende de $\Delta t$; en el límite
+    o con Euler explícito el método diverge.
+  \item Como el escalón es una máscara de celdas sólidas, la misma estructura sirve para otras geometrías rectangulares
+    (otra altura de escalón u obstáculos) cambiando \texttt{crear\_malla} y \texttt{fronteras}.
+\end{itemize}
+
+\subsection{Limitaciones}
+\begin{itemize}
+  \item \textbf{Bidimensional.} El flujo real se vuelve tridimensional para $\Rey\gtrsim400$ \cite{armaly}; por eso
+    comparamos con simulaciones 2D y no directamente con los experimentos a $\Rey$ alto.
+  \item \textbf{Laminar y estacionario.} No hay modelo de turbulencia; el modelo deja de ser válido cerca de la transición
+    ($\Rey\approx1200$).
+  \item \textbf{Resolución.} La malla es uniforme y no se refina cerca de la esquina. A $\Rey=800$ (fuera del rango
+    estudiado) obtuvimos $x_r/S=10.71$ con 20 celdas/$H$ frente a 11.55 de la literatura ($-\SI{7}{\percent}$): a
+    $\Rey$ alto hacen falta más celdas.
+  \item \textbf{Costo del método explícito.} El CFL limita $\Delta t$: cada vez que se duplica la malla el costo crece
+    $\sim$10 veces, y el estado estacionario se alcanza marchando en el tiempo (\num{17338} pasos a $\Rey=600$).
+  \item \textbf{Condiciones de frontera idealizadas.} La entrada supone un perfil de Poiseuille ya desarrollado a $2H$ del
+    escalón, y la salida exige un canal más largo que el remolino ($L=25H$). Ambas influyen en $x_r$; la mayor
+    diferencia con la literatura ($-\SI{5.4}{\percent}$ a $\Rey=100$) ocurre donde la burbuja es más sensible al perfil
+    de entrada.
+  \item \textbf{Propiedades constantes}: fluido newtoniano, isotérmico y sin gravedad.
+\end{itemize}
 
 % ================================================================
 \begin{thebibliography}{9}\small
@@ -500,25 +637,9 @@ Los parámetros de la demostración en vivo (\texttt{RE}, \texttt{NY}, \texttt{L
 \texttt{HACER\_VIDEOS = False} el notebook se salta los videos y corre en $\sim$5 min. Las figuras se guardan en
 \texttt{figures/}.
 
-\begin{table}[H]
-\centering\small
-\caption{Correspondencia entre el método y las funciones del notebook.}
-\begin{tabular}{@{}ll@{}}
-\toprule
-Función & Qué implementa\\
-\midrule
-\texttt{crear\_malla} & Malla MAC de $-L_I$ a $L$; marca las celdas sólidas del escalón\\
-\texttt{perfil\_entrada} & Perfil de Poiseuille $u=6U\eta(1-\eta)$\\
-\texttt{matriz\_presion} & Matriz de Poisson (Neumann/Dirichlet) y su factorización LU\\
-\texttt{fronteras} & Condiciones de frontera con celdas fantasma\\
-\texttt{aceleracion\_u}, \texttt{aceleracion\_v} & $\mathbf A$: difusión de 5 puntos y convección centrada conservativa\\
-\texttt{simular} & Ciclo de tres pasos \eqref{eq:pred}--\eqref{eq:corr}, CFL y criterio de convergencia\\
-\texttt{reacoplamiento}, \texttt{vorticidad} & Post-proceso: $x_r$ por cruce de signo; $\omega$ en las esquinas\\
-\bottomrule
-\end{tabular}
-\end{table}
+La correspondencia entre las funciones y el método está en la tabla~\ref{tab:funciones}.
 
-\section{Código fuente de las funciones principales}
+\section{Código fuente de las funciones principales}\label{sec:anexo-codigo}
 
 \lstset{basicstyle=\ttfamily\scriptsize}
 El código de esta sección se extrae automáticamente del notebook final al compilar el reporte

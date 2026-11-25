@@ -25,7 +25,7 @@ for nombre in FUNCIONES:
 
 for _ in range(2):
     r = subprocess.run(["pdflatex", "-interaction=nonstopmode", "-halt-on-error", "reporte.tex"],
-                       cwd=AQUI, capture_output=True, text=True)
+                       cwd=AQUI, capture_output=True, text=True, errors="replace")
     if r.returncode != 0:
         print(r.stdout[-3000:])
         raise SystemExit("pdflatex falló")

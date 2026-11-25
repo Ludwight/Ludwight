@@ -124,7 +124,7 @@ escalón}.}
 recirculación y reacoplamiento. Y hay experimentos, como los de Armaly en 1983, y muchas simulaciones para comparar.}
 
 % ---------------------------------------------------------------------
-\diapo{3}{Ecuaciones de gobierno}{Luis · reporte §2.1–2.3}{1:45}
+\diapo{3}{Ecuaciones de gobierno}{Luis · reporte §2.1–2.4}{1:45}
 
 \luis{Las ecuaciones son las de clase. La primera es \textbf{continuidad}: como el fluido es incompresible, la
 divergencia de la velocidad es cero; no se crea ni se pierde masa.}
@@ -150,7 +150,7 @@ hidrostática que no cambia el movimiento.}
 continuidad}. Eso es justo lo que resuelve el método que va a explicar Marco.}
 
 % ---------------------------------------------------------------------
-\diapo{4}{Condiciones iniciales y de frontera}{Luis · reporte §2.4}{1:30}
+\diapo{4}{Condiciones iniciales y de frontera}{Luis · reporte §2.5}{1:30}
 
 \luis{La \textbf{condición inicial} es el fluido en reposo; avanzamos en el tiempo hasta que el flujo deja de cambiar, que
 es el estado estacionario.}
@@ -208,7 +208,7 @@ derecho. Si el vecino es pared, no se suma, que es la condición de Neumann. En 
 $p=0$, y eso da un coeficiente de menos dos. El escalón es simplemente un \textbf{bloque de celdas sólidas}.}
 
 % ---------------------------------------------------------------------
-\diapo{7}{Código I: matriz de Poisson y fronteras}{Marco · reporte anexo B}{1:15}
+\diapo{7}{Código I: matriz de Poisson y fronteras}{Marco · reporte §3.6 y anexo B}{1:15}
 
 \marco{Esto es el código real del notebook. Cada celda se numera como $k=i\cdot N_y+j$, y \textbf{cada fila de la matriz
 es la ecuación de una celda}. Si la celda es sólida, la ecuación es trivial. Para cada uno de los cuatro vecinos: si
@@ -264,7 +264,7 @@ Adams–Bashforth.}
 
 % =====================================================================
 \section{Verificación y resultados}
-\diapo{9}{Estabilidad y convergencia}{Luis · reporte §3.4, §5.2 y §5.3}{1:30}
+\diapo{9}{Estabilidad y convergencia}{Luis · reporte §3.4, §5.3 y §5.4}{1:30}
 
 \luis{Lo que acabamos de ver es la \textbf{condición CFL}: en un paso de tiempo el fluido no debe avanzar más de una
 celda, $\Delta t\le\Delta x/|u|_{\max}$. Con celdas de 0.05 y velocidad máxima 1.5, el límite es 0.033. El límite por
@@ -282,7 +282,7 @@ con malla infinita es 4.95, así que \textbf{con 20 celdas el error es de 0.8\,\
 \luis{Sí: la divergencia final es del orden de $10^{-15}$, que es el cero de la computadora.}
 
 % ---------------------------------------------------------------------
-\diapo{10}{Análisis paramétrico: viscosidad}{Marco · reporte §4.1 y §5.1}{1:30}
+\diapo{10}{Análisis paramétrico: viscosidad}{Marco · reporte §4.3, §5.1 y §5.2}{1:30}
 
 \accion{Reproducir el video.}
 \marco{Aquí están tres arranques desde el reposo, con \textbf{Reynolds 100, 300 y 600}. La tinta son partículas que el
@@ -295,6 +295,9 @@ techo estrecha el paso y empuja el chorro hacia abajo}.}
 
 \luis{Y el tiempo para llegar al estacionario también crece, de 20 a 289 unidades: el transitorio lo controla la
 difusión viscosa.}
+
+\marco{\emph{Opcional:} y aumentar la velocidad de entrada es lo mismo que aumentar Reynolds, porque $\Rey=UH/\nu$. Para
+agua en un canal de un centímetro, Reynolds de 100 a 600 son velocidades de 1 a 6 centímetros por segundo.}
 
 % ---------------------------------------------------------------------
 \diapo{11}{Validación}{Luis · reporte §6}{1:00}
