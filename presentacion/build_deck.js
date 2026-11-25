@@ -1,6 +1,6 @@
-// Genera presentacion.pptx (12 diapositivas) con pptxgenjs.
+// Genera presentacion.pptx (12 diapositivas) con pptxgenjs, enfocada en el rigor matemático y el código.
 // Uso (desde presentacion/):  npm install  →  python render_eqs.py  →  node build_deck.js  →  python transiciones.py presentacion.pptx
-// Requiere que el notebook ya haya generado ../figures/*.png y los videos ../figures/*.mp4.
+// Requiere que el notebook ya haya generado ../figures/*.png y ../figures/*.mp4.
 const path = require("path");
 const fs = require("fs");
 const pptxgen = require("pptxgenjs");
@@ -9,39 +9,37 @@ const AQUI = __dirname;
 const FIG = path.join(AQUI, "..", "figures");
 const EQ = path.join(AQUI, "eq");
 
-// Paleta: azul-marino de la pared del canal, verde-azulado del flujo y coral para el punto de reacoplamiento.
 const C = {
   navy: "0B1F3A", navy2: "1A3457", teal: "0E7C86", aqua: "7FD1D6", coral: "F26B3A",
-  ink: "1E2A38", grey: "5B6878", paper: "F4F7FA", white: "FFFFFF", line: "D5DEE8",
+  ink: "1E2A38", grey: "5B6878", paper: "F4F7FA", white: "FFFFFF", line: "D5DEE8", code: "EEF3F8",
 };
 const FUENTE_TITULO = "Cambria";
 const FUENTE_TEXTO = "Calibri";
+const FUENTE_CODIGO = "Courier New";
 
 function tamanoPNG(archivo) {
   const b = fs.readFileSync(archivo);
   return { w: b.readUInt32BE(16), h: b.readUInt32BE(20) };
 }
-// Ajusta una imagen dentro de una caja (sin deformarla) y devuelve sus dimensiones finales.
 function encajar(archivo, x, y, maxW, maxH) {
   const { w, h } = tamanoPNG(archivo);
   const k = Math.min(maxW / w, maxH / h);
   return { x: x + (maxW - w * k) / 2, y: y + (maxH - h * k) / 2, w: w * k, h: h * k };
 }
-const sombra = () => ({ type: "outer", blur: 10, offset: 3, angle: 90, color: "000000", opacity: 0.18 });
+const sombra = () => ({ type: "outer", blur: 10, offset: 3, angle: 90, color: "000000", opacity: 0.16 });
 
 const pres = new pptxgen();
-pres.layout = "LAYOUT_WIDE";                       // 13.33 × 7.5 in
+pres.layout = "LAYOUT_WIDE";
 pres.author = "Luis Antonio Pérez Hernández · Marco Antonio Navarrete Baños";
 pres.title = "Flujo laminar sobre un escalón descendente";
 pres.theme = { headFontFace: FUENTE_TITULO, bodyFontFace: FUENTE_TEXTO };
 
-// ---------- plantillas ----------
 pres.defineSlideMaster({
   title: "CONTENIDO",
   background: { color: C.white },
   objects: [
     { placeholder: { options: { name: "title", type: "title", x: 0.6, y: 0.35, w: 12.1, h: 0.9, valign: "middle",
-      fontFace: FUENTE_TITULO, fontSize: 32, bold: true, color: C.navy, align: "left", margin: 0 }, text: "" } },
+      fontFace: FUENTE_TITULO, fontSize: 30, bold: true, color: C.navy, align: "left", margin: 0 }, text: "" } },
     { text: { text: "Flujo sobre un escalón descendente · Mecánica de Fluidos", options: { x: 0.6, y: 7.0, w: 9, h: 0.3,
       fontFace: FUENTE_TEXTO, fontSize: 10, color: "8A96A6", margin: 0 } } },
   ],
@@ -60,11 +58,10 @@ pres.defineSlideMaster({
   background: { color: C.navy },
   objects: [
     { placeholder: { options: { name: "title", type: "title", x: 0.6, y: 0.35, w: 12.1, h: 0.9, valign: "middle",
-      fontFace: FUENTE_TITULO, fontSize: 32, bold: true, color: C.white, align: "left", margin: 0 }, text: "" } },
+      fontFace: FUENTE_TITULO, fontSize: 30, bold: true, color: C.white, align: "left", margin: 0 }, text: "" } },
   ],
 });
 
-// Transiciones: el archivo se marca después con transiciones.py (fundido en todas las diapositivas).
 let seccionActual = null;
 function declarar(seccion) {
   if (seccion && seccion !== seccionActual) { pres.addSection({ title: seccion }); seccionActual = seccion; }
@@ -75,13 +72,13 @@ function nueva(titulo, { seccion, oscura = false } = {}) {
   if (titulo) s.addText(titulo, { placeholder: "title" });
   return s;
 }
-function circulo(s, n, x, y, d = 0.5, color = C.teal) {
+function circulo(s, n, x, y, d = 0.45, color = C.teal) {
   s.addShape(pres.shapes.OVAL, { x, y, w: d, h: d, fill: { color }, line: { type: "none" } });
   s.addText(String(n), { x, y, w: d, h: d, align: "center", valign: "middle", fontFace: FUENTE_TEXTO,
     fontSize: Math.round(d * 30), bold: true, color: C.white, margin: 0 });
 }
 function tarjeta(s, x, y, w, h, color = C.paper) {
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w, h, rectRadius: 0.12, fill: { color },
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w, h, rectRadius: 0.1, fill: { color },
     line: { type: "none" }, shadow: color === C.paper ? undefined : sombra() });
 }
 function imagen(s, archivo, x, y, maxW, maxH, conTarjeta = true) {
@@ -90,295 +87,377 @@ function imagen(s, archivo, x, y, maxW, maxH, conTarjeta = true) {
   s.addImage({ path: archivo, x: p.x, y: p.y, w: p.w, h: p.h });
   return p;
 }
+// Ecuación LaTeX (PNG de render_eqs.py), escalada para caber en maxW × maxH; devuelve su alto.
+function eq(s, nombre, x, y, maxW, maxH = 1.0) {
+  const archivo = path.join(EQ, nombre + ".png");
+  const p = encajar(archivo, x, y, maxW, maxH);
+  s.addImage({ path: archivo, x: p.x, y: p.y, w: p.w, h: p.h });
+  return p.h;
+}
 function video(s, archivo, poster, x, y, w) {
   const h = w * 9 / 16;
   const cover = "data:image/png;base64," + fs.readFileSync(poster).toString("base64");
   s.addMedia({ type: "video", path: archivo, x, y, w, h, cover });
   return h;
 }
-function lista(s, items, x, y, w, h, tam = 15) {
+function lista(s, items, x, y, w, h, tam = 14) {
   s.addText(items.map((t, i) => ({ text: t, options: { bullet: true, breakLine: i < items.length - 1 } })),
-    { x, y, w, h, fontFace: FUENTE_TEXTO, fontSize: tam, color: C.ink, valign: "top", paraSpaceAfter: 8, margin: 0 });
+    { x, y, w, h, fontFace: FUENTE_TEXTO, fontSize: tam, color: C.ink, valign: "top", paraSpaceAfter: 6, margin: 0 });
 }
 function texto(s, t, x, y, w, h, o = {}) {
-  s.addText(t, Object.assign({ x, y, w, h, fontFace: FUENTE_TEXTO, fontSize: 15, color: C.ink, valign: "top", margin: 0 }, o));
+  s.addText(t, Object.assign({ x, y, w, h, fontFace: FUENTE_TEXTO, fontSize: 14, color: C.ink, valign: "top", margin: 0 }, o));
 }
-const EQ_W = (f) => tamanoPNG(path.join(EQ, f + ".png"));
-function ecuacion(s, nombre, x, y, anchoMax, altoMax) {
-  const { w, h } = EQ_W(nombre);
-  const k = Math.min(anchoMax / w, altoMax / h);
-  s.addImage({ path: path.join(EQ, nombre + ".png"), x, y, w: w * k, h: h * k });
-  return h * k;
+// Bloque de código: cada línea es un párrafo; lo que sigue a '#' va en color de comentario.
+function codigo(s, lineas, x, y, w, h, tam = 11) {
+  const runs = [];
+  lineas.forEach((ln, i) => {
+    const [cuerpo, comentario] = ln.split(/\s+#/);
+    runs.push({ text: cuerpo.replace(/\s+$/, "") + (comentario !== undefined ? "  " : ""),
+      options: { color: C.navy, fontFace: FUENTE_CODIGO, fontSize: tam } });
+    if (comentario !== undefined) runs.push({ text: "# " + comentario,
+      options: { color: C.teal, fontFace: FUENTE_CODIGO, fontSize: tam } });
+    runs[runs.length - 1].options.breakLine = i < lineas.length - 1;
+  });
+  tarjeta(s, x, y, w, h, C.code);
+  s.addText(runs, { x: x + 0.2, y: y + 0.12, w: w - 0.4, h: h - 0.24, valign: "top", margin: 0, paraSpaceAfter: 0,
+    lineSpacingMultiple: 1.15 });
 }
+function celda(t, o = {}) { return { text: t, options: o }; }
+const cab = (t) => celda(t, { bold: true, color: C.white, fill: { color: C.navy } });
 
 // ================= 1. Portada =================
 {
   const s = pres.addSlide({ masterName: "PORTADA", sectionTitle: declarar("Presentación") });
   s.addText("Flujo laminar sobre un escalón descendente", { placeholder: "title" });
   texto(s, "PROYECTO FINAL · MECÁNICA DE FLUIDOS", 0.6, 1.2, 6.4, 0.4, { fontSize: 13, bold: true, color: C.aqua });
-  texto(s, "Navier–Stokes 2D con el método de proyección: análisis paramétrico y validación", 0.6, 3.85, 6.0, 0.9,
-    { fontSize: 18, color: "C9D6E3" });
+  texto(s, "Navier–Stokes 2D con el método de proyección: formulación, discretización, código y validación",
+    0.6, 3.85, 6.0, 0.9, { fontSize: 17, color: "C9D6E3" });
   texto(s, "Luis Antonio Pérez Hernández\nMarco Antonio Navarrete Baños", 0.6, 5.2, 6.0, 0.8,
     { fontSize: 16, color: C.white, paraSpaceAfter: 4 });
   texto(s, "Prof. Anuar Sánchez", 0.6, 6.3, 6.0, 0.4, { fontSize: 13, color: "9FB0C4" });
-  video(s, path.join(FIG, "arranque_re200.mp4"), path.join(EQ, "arranque_re200_portada.png"), 7.1, 2.0, 5.6);
-  s.addNotes("Presentación del equipo (30 s). El video de la derecha es la simulación del arranque; "
-    + "la presentación técnica empieza en la diapositiva 2.");
+  imagen(s, path.join(EQ, "arranque_re200_portada.png"), 7.1, 2.0, 5.6, 3.6, false);
+  s.addNotes("Presentación del equipo (30 s). La exposición sigue el orden de la formulación: "
+    + "ecuaciones, condiciones, método, discretización, código, estabilidad y resultados.");
 }
 
-// ================= 2. Fenómeno =================
+// ================= 2. Fenómeno y caso base =================
 {
-  const s = nueva("¿Qué pasa en un escalón descendente?", { seccion: "El problema" });
+  const s = nueva("El fenómeno y el caso base: Re = 200", { seccion: "Problema físico" });
   const pasos = [
-    ["La capa límite se separa", "El fluido pegado a la pared no tiene inercia para seguir el cambio de geometría."],
-    ["Aparece un remolino", "Bajo la capa de corte la velocidad es negativa (u < 0)."],
-    ["La presión sube", "El fluido se frena al ensancharse el canal: gradiente adverso."],
-    ["El flujo vuelve a pegarse", "En el reacoplamiento x_r la tensión en la pared es cero."],
+    ["La capa límite se separa", "En la arista, el fluido pegado a la pared no puede seguir el cambio de geometría."],
+    ["Aparece un remolino", "Bajo la capa de corte, la velocidad es negativa: u < 0."],
+    ["La presión sube", "Al ensancharse el canal, ∂p/∂x > 0: gradiente adverso."],
+    ["El flujo vuelve a pegarse", "En el reacoplamiento, τ_w = 0 y x_r/S = 4.91."],
   ];
   pasos.forEach(([t, d], i) => {
-    const y = 1.55 + i * 1.3;
-    circulo(s, i + 1, 0.6, y + 0.05, 0.52);
-    texto(s, t, 1.35, y, 4.0, 0.4, { fontSize: 17, bold: true, color: C.navy });
-    texto(s, d, 1.35, y + 0.4, 4.0, 0.7, { fontSize: 14, color: C.grey });
+    const y = 1.5 + i * 1.2;
+    circulo(s, i + 1, 0.6, y + 0.04);
+    texto(s, t, 1.3, y, 3.9, 0.35, { fontSize: 16, bold: true, color: C.navy });
+    texto(s, d, 1.3, y + 0.36, 3.9, 0.7, { fontSize: 13, color: C.grey });
   });
-  imagen(s, path.join(FIG, "campos_base.png"), 5.6, 1.45, 7.2, 5.2);
-  s.addNotes("Explicar separación por gradiente de presión adverso, capa de corte, burbuja de recirculación, "
-    + "reacoplamiento (τ_pared = 0) y, para Re > 400, la burbuja secundaria en el techo.");
+  tarjeta(s, 0.6, 6.25, 4.6, 0.55, C.paper);
+  texto(s, "2 608 pasos · ~3 s de cálculo · |∇·u|máx ≈ 8·10⁻¹⁵", 0.8, 6.36, 4.3, 0.35, { fontSize: 12, color: C.navy, bold: true });
+  imagen(s, path.join(FIG, "campos_base.png"), 5.5, 1.5, 7.3, 5.2);
+  s.addNotes("Velocidad con líneas de corriente, vorticidad y presión. La línea discontinua marca el reacoplamiento. "
+    + "Explicar el origen de la separación con el gradiente adverso.");
 }
 
-// ================= 3. Modelo =================
+// ================= 3. Ecuaciones de gobierno =================
 {
-  const s = nueva("Modelo físico: ecuaciones y supuestos", { seccion: "Modelo y método" });
-  tarjeta(s, 0.6, 1.5, 7.3, 5.2);
-  texto(s, "Ecuaciones de gobierno (adimensionales)", 0.95, 1.75, 6.6, 0.4, { fontSize: 15, bold: true, color: C.teal });
-  let y = 2.35;
-  y += ecuacion(s, "continuidad", 0.95, y, 6.6, 0.7) + 0.45;
-  y += ecuacion(s, "momento", 0.95, y, 6.6, 1.1) + 0.45;
-  ecuacion(s, "adimensional", 0.95, y, 6.6, 0.7);
-  texto(s, "Poiseuille en la entrada:", 0.95, 5.55, 6.6, 0.35, { fontSize: 13, color: C.grey });
-  ecuacion(s, "poiseuille", 0.95, 5.9, 6.6, 0.6);
+  const s = nueva("Ecuaciones de gobierno", { seccion: "Formulación" });
+  tarjeta(s, 0.6, 1.45, 8.1, 5.35);
+  texto(s, "Continuidad (conservación de la masa)", 0.9, 1.7, 7.5, 0.3, { fontSize: 13, bold: true, color: C.teal });
+  eq(s, "continuidad", 0.9, 2.05, 7.5, 0.6);
+  texto(s, "Cantidad de movimiento (Navier–Stokes), forma conservativa", 0.9, 3.0, 7.5, 0.3, { fontSize: 13, bold: true, color: C.teal });
+  eq(s, "mom_x", 0.9, 3.4, 7.5, 0.8);
+  eq(s, "mom_y", 0.9, 4.45, 7.5, 0.8);
+  texto(s, "La forma conservativa (∂(u²)/∂x en lugar de u ∂u/∂x) es equivalente por continuidad, y es la que discretizamos: "
+    + "el momento que sale de una celda es el que entra a la vecina.", 0.9, 5.45, 7.5, 1.2, { fontSize: 12, color: C.grey });
 
-  const chips = [
-    ["100 ≤ Re ≤ 600", "régimen laminar simulado"],
-    ["2D · incompresible", "newtoniano · isotérmico · sin gravedad"],
-    ["U = H = 1  →  ν = 1 / Re", "variar la viscosidad es variar Re"],
+  tarjeta(s, 9.0, 1.45, 3.7, 5.35, C.paper);
+  texto(s, "Adimensionalización", 9.25, 1.7, 3.3, 0.3, { fontSize: 13, bold: true, color: C.teal });
+  eq(s, "adim", 9.25, 2.05, 3.3, 0.9);
+  texto(s, "Geometría", 9.25, 3.2, 3.3, 0.3, { fontSize: 13, bold: true, color: C.teal });
+  eq(s, "geom", 9.25, 3.55, 3.3, 0.45);
+  texto(s, "Supuestos", 9.25, 4.25, 3.3, 0.3, { fontSize: 13, bold: true, color: C.teal });
+  lista(s, ["2D, incompresible, newtoniano", "Isotérmico y laminar (Re ≤ 600)", "Sin gravedad: sólo añade presión hidrostática",
+    "Un único parámetro: Re = UH/ν"], 9.25, 4.6, 3.3, 2.1, 12);
+  s.addNotes("Ecuaciones de la clase en forma adimensional con U, H y ρU². Un solo parámetro: Re. "
+    + "Variar ν equivale a variar Re; por eso el análisis paramétrico es sobre la viscosidad.");
+}
+
+// ================= 4. Condiciones iniciales y de frontera =================
+{
+  const s = nueva("Condiciones iniciales y de frontera", { seccion: "Formulación" });
+  const bloques = [
+    ["Condición inicial, t = 0", "ci", "Fluido en reposo en todo el dominio."],
+    ["Entrada, x = −2H", "entrada", "Perfil de Poiseuille: velocidad media U, máxima 1.5U."],
+    ["No deslizamiento", "noslip", "Piso, techo, tapa y cara del escalón."],
+    ["Salida, x = L", "salida", "Flujo ya desarrollado; referencia de presión."],
+    ["Presión en paredes y entrada", "neumann", "Sale de evaluar la cantidad de movimiento donde u = 0."],
+    ["Referencia de presión", "poisson", "Con p = 0 en la salida, la matriz de Poisson no es singular."],
   ];
-  chips.forEach(([big, small], i) => {
-    const yy = 1.5 + i * 1.75;
-    tarjeta(s, 8.3, yy, 4.4, 1.5, C.paper);
-    texto(s, big, 8.6, yy + 0.25, 3.9, 0.6, { fontFace: FUENTE_TITULO, fontSize: 22, bold: true, color: C.navy });
-    texto(s, small, 8.6, yy + 0.9, 3.9, 0.4, { fontSize: 14, color: C.grey });
+  bloques.forEach(([titulo, nombre, nota], i) => {
+    const col = i % 2, fila = Math.floor(i / 2);
+    const x = 0.6 + col * 6.15, y = 1.45 + fila * 1.8;
+    tarjeta(s, x, y, 5.95, 1.6, C.paper);
+    texto(s, titulo, x + 0.3, y + 0.15, 5.4, 0.3, { fontSize: 13, bold: true, color: C.teal });
+    if (nombre === "poisson") {
+      eq(s, "fantasma", x + 0.3, y + 0.55, 5.4, 0.5);
+      texto(s, nota, x + 0.3, y + 1.1, 5.4, 0.4, { fontSize: 11, color: C.grey });
+    } else {
+      eq(s, nombre, x + 0.3, y + 0.5, 5.4, 0.6);
+      texto(s, nota, x + 0.3, y + 1.15, 5.4, 0.4, { fontSize: 11, color: C.grey });
+    }
   });
-  s.addNotes("Adimensionalización con U (velocidad media de entrada) y H. Re basado en la altura H, "
-    + "igual que Armaly et al. y Gartling. Variar ν equivale a variar Re.");
+  s.addNotes("Se impone u = v = 0 en las paredes sólidas (no deslizamiento). La presión tiene condición de Neumann "
+    + "en las paredes; en la salida se fija p = 0. La entrada está en x = −2H, un canal de longitud 2H antes del escalón.");
 }
 
-// ================= 4. Condiciones =================
+// ================= 5. Método de proyección =================
 {
-  const s = nueva("Condiciones iniciales y de frontera", { seccion: "Modelo y método" });
-  const cab = (t) => ({ text: t, options: { bold: true, color: C.white, fill: { color: C.navy } } });
-  const filas = [
-    [cab("Frontera"), cab("Velocidad"), cab("Presión")],
-    ["Entrada x = −2H, S < y < H", "Poiseuille u = 6Uη(1−η), v = 0", "∂p/∂n = 0"],
-    ["Escalón (tapa y cara vertical)", "u = v = 0 (no deslizamiento)", "∂p/∂n = 0"],
-    ["Paredes y = 0 y y = H", "u = v = 0 (no deslizamiento)", "∂p/∂n = 0"],
-    ["Salida x = L", "∂u/∂x = ∂v/∂x = 0", "p = 0 (referencia)"],
-    ["Condición inicial t = 0", "fluido en reposo u = v = 0", "—"],
-  ].map((fila, i) => (i === 0 ? fila : fila.map((c, j) => ({ text: c, options: {
-    fill: { color: i % 2 ? C.white : C.paper }, bold: j === 0 } }))));
-  s.addTable(filas, { x: 0.6, y: 1.55, w: 12.1, colW: [3.9, 5.2, 3.0], fontFace: FUENTE_TEXTO, fontSize: 16,
-    color: C.ink, rowH: 0.62, valign: "middle", border: { type: "none" }, margin: [0.03, 0.139, 0.03, 0.139] });
-  texto(s, "La salida fija la referencia de presión y hace no singular la matriz de Poisson. El canal de entrada de 2H "
-    + "permite que el perfil se desarrolle antes de la esquina.", 0.6, 5.85, 12.1, 0.8, { fontSize: 15, color: C.grey });
-  s.addNotes("La entrada tiene un canal de 2H antes del escalón, como en los estudios de referencia; "
-    + "el escalón es un bloque de celdas sólidas.");
-}
-
-// ================= 5. Método =================
-{
-  const s = nueva("Método numérico: 3 pasos por cada Δt", { seccion: "Modelo y método" });
+  const s = nueva("Método de proyección de Chorin (1968)", { seccion: "Método numérico" });
   const tarjetas = [
-    ["Velocidad de prueba", ["paso1", "def_A"], "Navier–Stokes sin presión. Adams–Bashforth estima la aceleración a mitad de paso."],
-    ["Presión", ["paso2"], "La presión que hace cumplir continuidad. Sale de aplicar divergencia al paso 3."],
-    ["Corrección", ["paso3"], "Se corrige la velocidad con el gradiente de presión: ∇·u = 0."],
+    ["Velocidad de prueba", ["paso1", "def_A"], "Navier–Stokes sin presión. Adams–Bashforth (2.º orden) estima A a mitad de paso."],
+    ["Presión", ["paso2"], "La presión que hace cumplir continuidad. Se obtiene de la divergencia del paso 3."],
+    ["Corrección", ["paso3"], "La velocidad se corrige con el gradiente de presión: el resultado es solenoidal."],
   ];
   tarjetas.forEach(([t, eqs, d], i) => {
     const x = 0.6 + i * 4.1;
-    tarjeta(s, x, 1.5, 3.85, 3.05);
-    circulo(s, i + 1, x + 0.3, 1.72, 0.5);
-    texto(s, t, x + 0.95, 1.8, 2.8, 0.4, { fontSize: 17, bold: true, color: C.navy });
-    let y = 2.5;
-    eqs.forEach((e) => { y += ecuacion(s, e, x + 0.3, y, 3.3, 0.55) + 0.12; });
-    texto(s, d, x + 0.3, 3.65, 3.3, 0.85, { fontSize: 13, color: C.grey });
+    tarjeta(s, x, 1.45, 3.85, 3.2);
+    circulo(s, i + 1, x + 0.3, 1.65);
+    texto(s, t, x + 0.9, 1.7, 2.8, 0.4, { fontSize: 16, bold: true, color: C.navy });
+    let y = 2.35;
+    eqs.forEach((e) => { y += eq(s, e, x + 0.3, y, 3.3, 0.6) + 0.15; });
+    texto(s, d, x + 0.3, 3.75, 3.3, 0.85, { fontSize: 12, color: C.grey });
   });
-  imagen(s, path.join(FIG, "malla_escalonada.png"), 0.6, 4.85, 4.6, 2.0, false);
-  texto(s, "Malla escalonada", 0.6, 6.7, 4.6, 0.3, { fontSize: 11, color: C.grey });
-  lista(s, [
-    "Derivadas → diferencias; valor en la cara = promedio de vecinos",
-    "p en el centro de la celda; u y v en sus caras",
-    "Poisson: sistema lineal A·p = b, factorizado una sola vez (LU)",
-    "Estabilidad: CFL, Δt ≤ Δx / u_max  →  usamos la mitad",
-    "Masa conservada: |∇·u| ≈ 10⁻¹⁴",
-  ], 5.9, 4.95, 6.8, 1.9, 15);
-  s.addNotes("Paso 1: Navier–Stokes sin presión. Paso 2: Poisson para p. Paso 3: corregir. "
-    + "CFL: el fluido no avanza más de una celda por paso. Euler simple explota con convección por promedio.");
+  tarjeta(s, 0.6, 4.9, 12.1, 1.85, C.navy);
+  texto(s, "Por qué funciona: se aplica la divergencia al paso 3 y se exige ∇·uⁿ⁺¹ = 0", 0.95, 5.05, 11.5, 0.35,
+    { fontSize: 14, bold: true, color: C.aqua });
+  tarjeta(s, 0.95, 5.42, 11.5, 0.78, C.white);
+  eq(s, "deriv", 1.15, 5.47, 11.1, 0.68);
+  texto(s, "Sumando los pasos 1 y 3 se recupera la ecuación de cantidad de movimiento discretizada en el tiempo. "
+    + "La presión no tiene ecuación propia: es el multiplicador que impone la continuidad.", 0.95, 6.25, 11.5, 0.5,
+    { fontSize: 12, color: "C9D6E3" });
+  s.addNotes("Derivar el paso 2: aplicar ∇· al paso 3 y usar ∇·uⁿ⁺¹ = 0 da ∇²pⁿ⁺¹ = ∇·u*/Δt. "
+    + "La matriz de este sistema no cambia en el tiempo, así que se factoriza una sola vez.");
 }
 
-// ================= 6. Caso base =================
+// ================= 6. Discretización espacial =================
 {
-  const s = nueva("Caso base Re = 200: x_r/S = 4.91", { seccion: "Resultados" });
-  tarjeta(s, 0.6, 1.5, 4.1, 5.25, C.paper);
-  texto(s, "4.91", 0.95, 1.75, 3.5, 1.3, { fontFace: FUENTE_TITULO, fontSize: 88, bold: true, color: C.coral });
-  texto(s, "longitud del remolino, en alturas de escalón (x_r / S)", 0.95, 3.1, 3.5, 0.7, { fontSize: 15, color: C.grey });
-  lista(s, ["2 608 pasos · unos 3 s", "Divergencia máxima 8·10⁻¹⁵", "u_max: 1.5 → 0.75 por conservación de masa",
-    "Presión sube tras el escalón: gradiente adverso"], 0.95, 4.2, 3.6, 2.4, 14);
-  imagen(s, path.join(FIG, "campos_base.png"), 5.0, 1.5, 7.9, 5.2);
-  s.addNotes("Leer la figura: velocidad con líneas de corriente, vorticidad (capa de corte) y presión. "
-    + "Demo en vivo: cambiar RE en el bloque 0 del notebook y ejecutar.");
-}
-
-// ================= 7. Video arranque =================
-{
-  const s = nueva("Cómo se forma el remolino (tinta virtual)", { seccion: "Resultados" });
-  video(s, path.join(FIG, "arranque_re200.mp4"), path.join(EQ, "arranque_re200_portada.png"), 0.6, 1.5, 8.2);
-  texto(s, "Qué observar", 9.2, 1.5, 3.5, 0.4, { fontSize: 17, bold: true, color: C.navy });
-  const obs = ["Vórtice de arranque en forma de hongo", "Separación pasajera en el techo",
-    "x_r crece y se aplana hacia t ≈ 40", "Fluido gris atrapado: eso es la recirculación"];
-  obs.forEach((t, i) => {
-    const y = 2.1 + i * 1.1;
-    circulo(s, i + 1, 9.2, y, 0.42);
-    texto(s, t, 9.8, y, 3.0, 0.9, { fontSize: 14, color: C.ink });
-  });
-  texto(s, "Tablero gris: fluido que ya estaba en el canal. Colores: tinta que entra por cada inyector.",
-    0.6, 6.25, 8.2, 0.6, { fontSize: 12, color: C.grey });
-  s.addNotes("Reproducir el video (NY = 40). Señalar el vórtice de arranque, la separación pasajera y el fluido atrapado.");
-}
-
-// ================= 8. Viscosidad =================
-{
-  const s = nueva("Efecto de la viscosidad (Re)", { seccion: "Resultados" });
-  imagen(s, path.join(FIG, "re_remolinos.png"), 0.6, 1.45, 7.6, 5.4);
-  const stats = [
-    ["2.8 → 10.1", "x_r/S al pasar de Re 100 a Re 600"],
-    ["Re ≈ 400", "aparece la burbuja secundaria en el techo"],
-    ["τ_pared = 0", "marca el reacoplamiento en cada caso"],
+  const s = nueva("Discretización espacial: malla escalonada (MAC)", { seccion: "Método numérico" });
+  imagen(s, path.join(FIG, "malla_escalonada.png"), 0.6, 1.45, 5.0, 3.6, false);
+  texto(s, "p en el centro de cada celda; u en las caras verticales; v en las horizontales. El gradiente de presión "
+    + "usa dos nodos vecinos directos y se evita el desacople presión–velocidad.", 0.6, 5.2, 5.0, 1.5, { fontSize: 12, color: C.grey });
+  const filas = [
+    ["Difusión (5 puntos)", "lap", "Error de truncamiento O(Δx²)."],
+    ["Convección, forma conservativa", "conv", "Valor en la cara: promedio de los dos nodos."],
+    ["Gradiente de presión", "grad", "Diferencia entre celdas vecinas."],
+    ["Poisson para p", "poisson", "Una ecuación por celda; A es dispersa."],
   ];
-  stats.forEach(([big, small], i) => {
-    const y = 1.5 + i * 1.8;
-    tarjeta(s, 8.6, y, 4.1, 1.55, C.paper);
-    texto(s, big, 8.9, y + 0.2, 3.6, 0.6, { fontFace: FUENTE_TITULO, fontSize: 26, bold: true, color: C.teal });
-    texto(s, small, 8.9, y + 0.85, 3.6, 0.5, { fontSize: 14, color: C.grey });
+  filas.forEach(([t, nombre, nota], i) => {
+    const y = 1.45 + i * 1.3;
+    tarjeta(s, 6.1, y, 6.6, 1.15, C.paper);
+    texto(s, t, 6.35, y + 0.1, 6.1, 0.3, { fontSize: 13, bold: true, color: C.teal });
+    eq(s, nombre, 6.35, y + 0.42, 6.1, 0.4);
+    texto(s, nota, 6.35, y + 0.82, 6.1, 0.3, { fontSize: 11, color: C.grey });
   });
-  s.addNotes("Al bajar la viscosidad el chorro tarda más en transmitir su momento al piso; el remolino se alarga "
-    + "casi proporcional a Re hasta ~400. Después, la burbuja del techo empuja el chorro hacia abajo.");
+  texto(s, "Orden formal de la discretización: segundo orden en Δx. Comprobado en el estudio de malla (diapositiva 9).",
+    6.1, 6.7, 6.6, 0.3, { fontSize: 11, color: C.navy, bold: true });
+  s.addNotes("La convección y la difusión son de segundo orden. Con Adams–Bashforth el esquema también es de segundo orden "
+    + "en el tiempo. Con convección centrada y Euler simple el esquema diverge: por eso usamos AB2.");
 }
 
-// ================= 9. Video comparativo =================
+// ================= 7. Código I =================
 {
-  const s = nueva("Tres viscosidades, un mismo arranque", { seccion: "Resultados" });
-  video(s, path.join(FIG, "comparacion_re.mp4"), path.join(EQ, "comparacion_re_portada.png"), 0.6, 1.5, 8.2);
-  texto(s, "Qué cambia con Re", 9.2, 1.5, 3.5, 0.4, { fontSize: 17, bold: true, color: C.navy });
-  lista(s, ["Re = 100: el flujo se calma hacia t ≈ 20",
-    "Re = 300: el remolino crece y se estabiliza",
-    "Re = 600: vórtices que viajan y se juntan; aparece la burbuja del techo",
-    "Estado final: x_r/S = 2.8, 6.7 y 10.1"], 9.2, 2.05, 3.6, 4.0, 14);
-  texto(s, "Gráficas: x_r(t) abajo a la izquierda y velocidad junto al piso a la derecha.",
-    0.6, 6.25, 8.2, 0.5, { fontSize: 12, color: C.grey });
-  s.addNotes("Reproducir comparacion_re.mp4. Re = 100 se calma rápido; Re = 600 forma varios remolinos y una burbuja en el techo.");
+  const s = nueva("Código I: matriz de Poisson y condiciones de frontera", { seccion: "Código" });
+  codigo(s, [
+    "A = sps.lil_matrix((NX * NY, NX * NY))   # una ecuación por celda",
+    "for i in range(NX):                      # columnas de celdas (x)",
+    "    for j in range(NY):                  # filas de celdas (y)",
+    "        k = i * NY + j                   # número de la celda (i, j)",
+    "        if solido[i, j]:                 # escalón: p = 0, ecuación trivial",
+    "            A[k, k] = 1; continue",
+    "        for vi, vj in [(i+1, j), (i-1, j), (i, j+1), (i, j-1)]:",
+    "            if vi == NX:                 # salida: p fantasma = -p",
+    "                A[k, k] -= 2",
+    "            elif vi >= 0 and 0 <= vj < NY and not solido[vi, vj]:",
+    "                A[k, vi*NY + vj] = 1; A[k, k] -= 1   # vecino con fluido",
+    "return spla.splu(A.tocsc() / dx**2)      # LU: se factoriza una vez",
+  ], 0.6, 1.45, 7.4, 3.7, 11);
+  codigo(s, [
+    "v[0, :] = -v[1, :]                  # entrada: v = 0 (espejo)",
+    "u[:I0+1, 1:J0+1] = 0.0              # escalón: u = 0",
+    "u[:, 0] = -u[:, 1]                  # piso: u = 0 (espejo)",
+    "u[:, -1] = -u[:, -2]                # techo: u = 0",
+    "v[-1, :] = v[-2, :]                 # salida: ∂v/∂x = 0",
+  ], 0.6, 5.35, 7.4, 1.5, 11);
+  texto(s, "Lectura del código", 8.4, 1.45, 4.3, 0.35, { fontSize: 16, bold: true, color: C.navy });
+  lista(s, [
+    "Cada fila de A es la ecuación de una celda: suma de las diferencias con sus vecinos, igual a b·Δx².",
+    "Vecino sin fluido o pared: dp/dn = 0, ese término no se suma (Neumann).",
+    "En la salida, la cara está a Δx/2 y p = 0: el término vale −2p_P, como en la ecuación de referencia.",
+    "La matriz no depende de Δt ni del tiempo: LU se calcula una sola vez y cada paso sólo resuelve.",
+    "En la fila 'fantasma' el espejo impone la condición: el promedio en la pared da el valor deseado.",
+  ], 8.4, 1.9, 4.3, 5.0, 12);
+  s.addNotes("Explicar la numeración k = i·NY + j y la estructura dispersa de A. "
+    + "La LU es la eliminación gaussiana guardada: un solo costo de factorización para todos los pasos.");
 }
 
-// ================= 10. Malla y dt =================
+// ================= 8. Código II =================
 {
-  const s = nueva("Malla y paso de tiempo", { seccion: "Validación" });
+  const s = nueva("Código II: el ciclo de tres pasos y el criterio de convergencia", { seccion: "Código" });
+  codigo(s, [
+    "Au, Av = aceleracion_u(u, v, nu, dx), aceleracion_v(u, v, nu, dx)",
+    "u_est[1:-1, 1:-1] += dt * (1.5 * Au - 0.5 * Au_ant)   # paso 1: AB2",
+    "div = (u_est[1:, 1:-1] - u_est[:-1, 1:-1]",
+    "       + v_est[1:-1, 1:] - v_est[1:-1, :-1]) / dx        # ∇·u*",
+    "p = resolver_p.solve((div / dt).ravel()).reshape(NX, NY)  # paso 2: Poisson",
+    "u[1:-1, 1:-1] -= dt * (p[1:, :] - p[:-1, :]) / dx          # paso 3: ∂p/∂x",
+    "v[1:-1, 1:-1] -= dt * (p[:, 1:] - p[:, :-1]) / dx          # paso 3: ∂p/∂y",
+    "cambio = np.max(np.abs(u - u_viejo)) / dt                   # residuo",
+    "if cambio < tol and t > 5: break                            # convergencia",
+  ], 0.6, 1.45, 7.4, 3.95, 11);
+  eq(s, "criterio", 0.6, 5.6, 7.4, 0.55);
+  texto(s, "tol = 10⁻⁴ en las unidades adimensionales. Con 10⁻⁵ el valor de x_r cambia menos de 0.3 %.",
+    0.6, 6.3, 7.4, 0.5, { fontSize: 12, color: C.grey });
+  texto(s, "Correspondencia con el método", 8.4, 1.45, 4.3, 0.35, { fontSize: 16, bold: true, color: C.navy });
+  const pasos = [
+    ["paso1", "Velocidad de prueba: aceleración a mitad de paso con AB2."],
+    ["paso2", "Poisson: la divergencia de u* alimenta el vector b."],
+    ["paso3", "Corrección: los gradientes de p se restan en cada cara."],
+  ];
+  pasos.forEach(([e, t], i) => {
+    const y = 1.95 + i * 1.5;
+    tarjeta(s, 8.4, y, 4.3, 1.3, C.paper);
+    eq(s, e, 8.6, y + 0.12, 3.9, 0.45);
+    texto(s, t, 8.6, y + 0.7, 3.9, 0.55, { fontSize: 12, color: C.grey });
+  });
+  texto(s, "Cada iteración es un Δt. Los pasos 1 a 3 ocurren en ese orden, y la masa se verifica al final del ciclo.",
+    8.4, 6.45, 4.3, 0.5, { fontSize: 11, color: C.navy, bold: true });
+  s.addNotes("Recorrer el ciclo: la aceleración se calcula con el estado actual, después se predice, se resuelve Poisson "
+    + "y se corrige. La condición de paro usa el residuo normalizado por Δt.");
+}
+
+// ================= 9. Estabilidad y convergencia =================
+{
+  const s = nueva("Estabilidad y convergencia", { seccion: "Estabilidad y convergencia" });
+  tarjeta(s, 0.6, 1.45, 6.0, 5.35, C.paper);
+  texto(s, "Estabilidad: límites de Δt (Euler y AB2)", 0.9, 1.65, 5.5, 0.3, { fontSize: 13, bold: true, color: C.teal });
+  eq(s, "cfl", 0.9, 2.05, 5.4, 0.6);
+  texto(s, "Δx = 0.05, u_max = 1.5 → Δt_CFL = 0.033", 0.9, 2.75, 5.4, 0.3, { fontSize: 12, color: C.ink });
+  eq(s, "difusion", 0.9, 3.15, 5.4, 0.55);
+  texto(s, "Re = 200 → Δt_difusión = 0.125. Manda el CFL. Usamos CFL = 0.5.", 0.9, 3.85, 5.4, 0.3, { fontSize: 12, color: C.ink });
+  texto(s, "Convergencia al estado estacionario", 0.9, 4.35, 5.5, 0.3, { fontSize: 13, bold: true, color: C.teal });
+  eq(s, "criterio", 0.9, 4.75, 5.4, 0.55);
+  lista(s, ["Dentro del CFL el resultado no cambia: sólo cambia el número de pasos.",
+    "Euler simple diverge en 706 pasos, aun con Δt = 0.5 Δt_CFL.",
+    "Por encima del CFL la solución explota en 36 pasos."], 0.9, 5.45, 5.4, 1.3, 12);
+
   s.addChart(pres.charts.BAR, [{ name: "x_r/S", labels: ["10 celdas/H", "20 celdas/H", "40 celdas/H"],
-    values: [4.75, 4.91, 4.95] }], {
-    x: 0.6, y: 1.5, w: 6.0, h: 4.9, barDir: "col", chartColors: [C.teal], barGapWidthPct: 70,
-    showTitle: true, title: "x_r/S frente a la malla (Re = 200)", titleFontFace: FUENTE_TEXTO, titleFontSize: 15,
-    titleColor: C.navy, showValue: true, dataLabelPosition: "outEnd", dataLabelFontSize: 14, dataLabelColor: C.ink,
-    dataLabelFormatCode: "0.00", valAxisMinVal: 4.5, valAxisMaxVal: 5.1, valAxisMajorUnit: 0.1,
-    valAxisLabelFormatCode: "0.0", catAxisLabelFontSize: 13, valAxisLabelFontSize: 12,
+    values: [4.754, 4.914, 4.946] }], {
+    x: 6.9, y: 1.45, w: 5.8, h: 2.9, barDir: "col", chartColors: [C.teal], barGapWidthPct: 70,
+    showTitle: true, title: "Estudio de malla, x_r/S (Re = 200)", titleFontFace: FUENTE_TEXTO, titleFontSize: 13,
+    titleColor: C.navy, showValue: true, dataLabelPosition: "outEnd", dataLabelFontSize: 12, dataLabelColor: C.ink,
+    dataLabelFormatCode: "0.000", valAxisMinVal: 4.7, valAxisMaxVal: 5.0, valAxisMajorUnit: 0.1,
+    valAxisLabelFormatCode: "0.0", catAxisLabelFontSize: 11, valAxisLabelFontSize: 10,
     catAxisLabelColor: C.ink, valAxisLabelColor: C.grey, valGridLine: { color: C.line, size: 0.5 },
     catGridLine: { style: "none" }, showLegend: false, catAxisLabelFontFace: "+mn-lt", valAxisLabelFontFace: "+mn-lt",
     dataLabelFontFace: "+mn-lt",
   });
-  texto(s, "El eje vertical no empieza en cero para mostrar la diferencia.", 0.6, 6.45, 6.0, 0.4, { fontSize: 11, color: C.grey });
-
-  tarjeta(s, 7.0, 1.5, 5.7, 1.9, C.paper);
-  texto(s, "Malla", 7.3, 1.65, 5.0, 0.4, { fontSize: 16, bold: true, color: C.navy });
-  texto(s, "De 20 a 40 celdas el resultado cambia 0.7 %: el error con 20 celdas es menor a 1 %.",
-    7.3, 2.1, 5.1, 1.0, { fontSize: 14, color: C.ink });
-
-  texto(s, "Paso de tiempo (Re = 200, 20 celdas/H)", 7.0, 3.7, 5.7, 0.4, { fontSize: 16, bold: true, color: C.navy });
-  const cab = (t) => ({ text: t, options: { bold: true, color: C.white, fill: { color: C.navy } } });
+  eq(s, "orden", 6.9, 4.5, 5.8, 0.5);
+  texto(s, "Orden observado p ≈ 2.3 (formal 2). Extrapolado: x_r/S ≈ 4.95, así que el error con 20 celdas es ≈ 0.8 %.",
+    6.9, 5.05, 5.8, 0.5, { fontSize: 12, color: C.ink });
+  const cab2 = (t) => celda(t, { bold: true, color: C.white, fill: { color: C.navy } });
   s.addTable([
-    [cab("Δt / Δt_CFL"), cab("Resultado"), cab("x_r/S")],
-    ["0.25", "converge", "4.91"],
-    ["0.50", "converge", "4.91"],
-    ["0.80", "converge", "4.91"],
-    ["1.00", "diverge en 36 pasos", "—"],
-    ["Euler (0.50)", "diverge en 706 pasos", "—"],
-  ], { x: 7.0, y: 4.15, w: 5.7, colW: [1.8, 2.7, 1.2], fontFace: FUENTE_TEXTO, fontSize: 14, color: C.ink,
-    rowH: 0.42, border: { type: "solid", pt: 0.5, color: C.line }, margin: [0.03, 0.111, 0.03, 0.111], valign: "middle" });
-  s.addNotes("Duplicar la malla reduce el cambio unas 5 veces: esquema de segundo orden. Dentro del CFL el resultado "
-    + "no cambia; en el límite explota; Euler simple explota incluso con la mitad del Δt.");
+    [cab2("Δt / Δt_CFL"), cab2("Resultado"), cab2("x_r/S")],
+    ["0.25", "converge", "4.914"], ["0.50", "converge", "4.914"], ["0.80", "converge", "4.914"],
+    ["1.00", "diverge en 36 pasos", "—"], ["Euler, 0.50", "diverge en 706 pasos", "—"],
+  ], { x: 6.9, y: 5.55, w: 5.8, colW: [1.7, 2.7, 1.4], fontFace: FUENTE_TEXTO, fontSize: 11, color: C.ink,
+    rowH: 0.22, border: { type: "solid", pt: 0.5, color: C.line }, margin: [0.02, 0.08, 0.02, 0.08], valign: "middle" });
+  s.addNotes("Estabilidad: CFL (convectiva) y Fourier (difusiva). Convergencia: el orden observado sale de tres mallas con "
+    + "razón de refinamiento 2; la extrapolación de Richardson da x∞/S = 4.954.");
 }
 
-// ================= 11. Literatura =================
+// ================= 10. Análisis paramétrico: viscosidad =================
 {
-  const s = nueva("Comparación con la literatura", { seccion: "Validación" });
+  const s = nueva("Análisis paramétrico: viscosidad (Re)", { seccion: "Resultados" });
+  video(s, path.join(FIG, "comparacion_re.mp4"), path.join(EQ, "comparacion_re_portada.png"), 0.6, 1.45, 7.4);
+  texto(s, "Re = 100, 300 y 600 con NY = 20 y L = 25H. Abajo, x_r(t) y u junto al piso.",
+    0.6, 5.75, 7.4, 0.4, { fontSize: 12, color: C.grey });
+  const cab3 = (t) => celda(t, { bold: true, color: C.white, fill: { color: C.navy } });
+  s.addTable([
+    [cab3("Re"), cab3("ν"), cab3("x_r/S"), cab3("Burbuja del techo, x/H")],
+    ["100", "0.0100", "2.84", "—"], ["200", "0.0050", "4.91", "—"], ["300", "0.0033", "6.73", "—"],
+    ["400", "0.0025", "8.26", "4.20 – 4.50"], ["500", "0.0020", "9.40", "4.00 – 6.30"], ["600", "0.0017", "10.06", "4.05 – 7.60"],
+  ], { x: 8.3, y: 1.45, w: 4.4, colW: [0.7, 0.9, 0.9, 1.9], fontFace: FUENTE_TEXTO, fontSize: 12, color: C.ink,
+    rowH: 0.38, border: { type: "solid", pt: 0.5, color: C.line }, margin: [0.03, 0.07, 0.03, 0.07], valign: "middle", align: "center" });
+  tarjeta(s, 8.3, 4.5, 4.4, 1.2, C.paper);
+  texto(s, "Reacoplamiento", 8.5, 4.6, 4.0, 0.3, { fontSize: 13, bold: true, color: C.teal });
+  eq(s, "tauw", 8.5, 4.95, 4.1, 0.45);
+  texto(s, "Mayor Re → menor ν → burbuja más larga, casi lineal hasta Re ≈ 400.", 8.3, 5.9, 4.4, 0.6,
+    { fontSize: 12, color: C.grey });
+  s.addNotes("Variar ν = 1/Re. Re = 100 se calma hacia t ≈ 20; Re = 600 forma vórtices que viajan y una burbuja en el techo. "
+    + "Cada caso se corrió hasta cumplir el criterio de convergencia de la diapositiva 9.");
+}
+
+// ================= 11. Validación =================
+{
+  const s = nueva("Validación con la literatura", { seccion: "Validación" });
   const re = ["100", "200", "300", "400", "500", "600"];
   s.addChart(pres.charts.LINE, [
     { name: "Literatura (2D)", labels: re, values: [3.00, 4.95, 6.75, 8.10, 9.30, 10.05] },
     { name: "Este trabajo", labels: re, values: [2.84, 4.91, 6.73, 8.26, 9.40, 10.06] },
   ], {
-    x: 0.6, y: 1.5, w: 7.2, h: 5.2, chartColors: [C.grey, C.coral], lineSize: 2.5, lineDataSymbol: "circle",
+    x: 0.6, y: 1.45, w: 7.2, h: 5.2, chartColors: [C.grey, C.coral], lineSize: 2.5, lineDataSymbol: "circle",
     lineDataSymbolSize: 9, lineDataSymbolLineColor: C.white,
     showTitle: true, title: "Longitud de reacoplamiento x_r/S contra Re", titleFontFace: FUENTE_TEXTO,
-    titleFontSize: 15, titleColor: C.navy, showLegend: true, legendPos: "b", legendFontSize: 13, legendColor: C.ink,
-    catAxisTitle: "Re", showCatAxisTitle: true, catAxisTitleFontSize: 13, catAxisTitleColor: C.grey,
-    valAxisTitle: "x_r / S", showValAxisTitle: true, valAxisTitleFontSize: 13, valAxisTitleColor: C.grey,
+    titleFontSize: 14, titleColor: C.navy, showLegend: true, legendPos: "b", legendFontSize: 12, legendColor: C.ink,
+    catAxisTitle: "Re", showCatAxisTitle: true, catAxisTitleFontSize: 12, catAxisTitleColor: C.grey,
+    valAxisTitle: "x_r / S", showValAxisTitle: true, valAxisTitleFontSize: 12, valAxisTitleColor: C.grey,
     valAxisMinVal: 2, valAxisMaxVal: 11, valAxisMajorUnit: 1, valAxisLabelFormatCode: "0",
-    catAxisLabelFontSize: 13, valAxisLabelFontSize: 12, catAxisLabelColor: C.ink, valAxisLabelColor: C.grey,
+    catAxisLabelFontSize: 12, valAxisLabelFontSize: 11, catAxisLabelColor: C.ink, valAxisLabelColor: C.grey,
     valGridLine: { color: C.line, size: 0.5 }, catGridLine: { style: "none" },
     catAxisLabelFontFace: "+mn-lt", valAxisLabelFontFace: "+mn-lt", legendFontFace: "+mn-lt",
   });
-
-  const cab = (t) => ({ text: t, options: { bold: true, color: C.white, fill: { color: C.navy } } });
   const filas = [
     [cab("Re"), cab("Este trabajo"), cab("Literatura"), cab("Dif.")],
     ["100", "2.84", "3.00", "−5.4 %"], ["200", "4.91", "4.95", "−0.7 %"], ["300", "6.73", "6.75", "−0.3 %"],
     ["400", "8.26", "8.10", "+2.0 %"], ["500", "9.40", "9.30", "+1.1 %"], ["600", "10.06", "10.05", "+0.1 %"],
   ];
-  s.addTable(filas, { x: 8.2, y: 1.6, w: 4.5, colW: [0.8, 1.35, 1.25, 1.1], fontFace: FUENTE_TEXTO, fontSize: 14,
-    color: C.ink, rowH: 0.42, border: { type: "solid", pt: 0.5, color: C.line }, margin: [0.03, 0.083, 0.03, 0.083], valign: "middle",
-    align: "center" });
-  texto(s, "Para 200 ≤ Re ≤ 600 la diferencia es de 2 % o menos. El error de malla es menor a 1 %, así que la diferencia "
-    + "es del orden de la dispersión entre estudios publicados.", 8.2, 4.85, 4.5, 1.5, { fontSize: 13, color: C.grey });
-  s.addNotes("Fuente de la tabla de referencia: arXiv:2507.16509 (Tabla 1); la tendencia coincide con Armaly et al. (1983) "
-    + "hasta Re ≈ 400.");
+  s.addTable(filas, { x: 8.2, y: 1.6, w: 4.5, colW: [0.8, 1.35, 1.25, 1.1], fontFace: FUENTE_TEXTO, fontSize: 13,
+    color: C.ink, rowH: 0.4, border: { type: "solid", pt: 0.5, color: C.line }, margin: [0.03, 0.07, 0.03, 0.07],
+    valign: "middle", align: "center" });
+  texto(s, "Para 200 ≤ Re ≤ 600 la diferencia es de 2 % o menos. El error de malla es < 1 %, así que la diferencia "
+    + "es del orden de la dispersión entre estudios publicados.", 8.2, 4.7, 4.5, 1.4, { fontSize: 12, color: C.grey });
+  texto(s, "Referencia de la tabla: arXiv:2507.16509 (Tabla 1). Concuerda con Armaly et al. (1983) hasta Re ≈ 400.",
+    8.2, 6.2, 4.5, 0.6, { fontSize: 10, color: "8A96A6" });
+  s.addNotes("La comparación es con simulaciones 2D publicadas del mismo problema; no con la solución exacta, que no existe.");
 }
 
 // ================= 12. Conclusiones =================
 {
   const s = nueva("Conclusiones", { oscura: true, seccion: "Conclusiones" });
   const items = [
-    ["Navier–Stokes resuelto", "Método de proyección; la masa se conserva a precisión de máquina."],
-    ["Física reproducida", "Separación, recirculación, reacoplamiento y remolino del techo a Re ≥ 400."],
-    ["Análisis numérico", "Malla: error < 1 %. Δt estable no cambia el resultado; Euler simple explota."],
-    ["Validación", "Diferencia de 2 % o menos con la literatura para Re entre 200 y 600."],
+    ["Formulación", "Continuidad y Navier–Stokes con condiciones de frontera explícitas; masa conservada a precisión de máquina."],
+    ["Método", "Proyección de Chorin con Adams–Bashforth (2.º orden), malla MAC y Poisson con factorización LU."],
+    ["Estabilidad y convergencia", "CFL = 0.5 garantiza estabilidad; error de malla < 1 % con 20 celdas/H (orden observado 2.3)."],
+    ["Resultados", "Remolino y reacoplamiento reproducidos; remolino del techo desde Re ≈ 400; 2 % o menos frente a la literatura."],
   ];
   items.forEach(([t, d], i) => {
-    const x = 0.6 + (i % 2) * 6.15, y = 1.6 + Math.floor(i / 2) * 2.45;
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: 5.95, h: 2.2, rectRadius: 0.12,
+    const x = 0.6 + (i % 2) * 6.15, y = 1.45 + Math.floor(i / 2) * 2.4;
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: 5.95, h: 2.15, rectRadius: 0.1,
       fill: { color: C.navy2 }, line: { type: "none" } });
-    texto(s, String(i + 1).padStart(2, "0"), x + 0.35, y + 0.3, 1.2, 0.7,
-      { fontFace: FUENTE_TITULO, fontSize: 30, bold: true, color: C.aqua });
-    texto(s, t, x + 1.55, y + 0.35, 4.1, 0.5, { fontSize: 19, bold: true, color: C.white });
-    texto(s, d, x + 1.55, y + 0.95, 4.1, 1.1, { fontSize: 15, color: "C9D6E3" });
+    texto(s, String(i + 1).padStart(2, "0"), x + 0.3, y + 0.25, 1.0, 0.6,
+      { fontFace: FUENTE_TITULO, fontSize: 28, bold: true, color: C.aqua });
+    texto(s, t, x + 1.35, y + 0.3, 4.4, 0.45, { fontSize: 17, bold: true, color: C.white });
+    texto(s, d, x + 1.35, y + 0.8, 4.4, 1.2, { fontSize: 13, color: "C9D6E3" });
   });
-  texto(s, "¡Gracias! Preguntas", 0.6, 6.6, 12.1, 0.5, { fontFace: FUENTE_TITULO, fontSize: 22, bold: true,
+  texto(s, "Código: escalon_descendente.ipynb · Ejecutar todo (~13 min con videos, ~5 min sin ellos)", 0.6, 6.4, 12.1, 0.35,
+    { fontSize: 12, color: "9FB0C4", align: "center" });
+  texto(s, "¡Gracias! Preguntas", 0.6, 6.75, 12.1, 0.45, { fontFace: FUENTE_TITULO, fontSize: 20, bold: true,
     color: C.white, align: "center" });
-  s.addNotes("Cierre (1 min) y preguntas. Tener el notebook abierto para la demostración.");
+  s.addNotes("Cierre (1 min). Tener el notebook abierto para responder preguntas sobre el código.");
 }
 
 pres.writeFile({ fileName: path.join(AQUI, "presentacion.pptx") }).then((f) => console.log("escrito", f));
