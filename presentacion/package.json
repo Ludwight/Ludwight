@@ -1,0 +1,8 @@
+{
+  "name": "presentacion-escalon",
+  "private": true,
+  "description": "Genera presentacion.pptx del proyecto de escalón descendente",
+  "dependencies": {
+    "pptxgenjs": "^3.12.0"
+  }
+}

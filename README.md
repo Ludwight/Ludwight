@@ -8,7 +8,7 @@ convección por promedio (segundo orden) y Adams–Bashforth en el tiempo. El ar
 |---|---|
 | Código (Ejecutar todo: ~13 min con videos, ~5 min con `HACER_VIDEOS = False`) | `escalon_descendente.ipynb` |
 | Reporte escrito (PDF) | `reporte/reporte.pdf` (fuente: `reporte/reporte.md`) |
-| Diapositivas (12, dos con video) | `presentacion/presentacion.pptx` (notas del orador con el reparto sugerido) |
+| Diapositivas (12, con transiciones y dos videos) | `presentacion/presentacion.pptx` (notas del orador con el reparto sugerido) |
 | Guía para estudiar el código línea por línea | `guia/guia_explicacion.pdf` |
 | Videos de la simulación (1080p) | `figures/arranque_re200.mp4`, `figures/comparacion_re.mp4` |
 | Video para YouTube (2:39, con voz y subtítulos; versión sin voz y guion con tiempos) | `video/video_proyecto.mp4`, `video/video_proyecto_sin_voz.mp4`, `video/guion_video.md` |
@@ -33,4 +33,4 @@ Para la demo en vivo, cambiar `RE` (y si se quiere `NY`, `L`) en el bloque 0 del
 
 Error de malla con 20 celdas/H: < 1 % (NY = 10 / 20 / 40 → 4.75 / 4.91 / 4.95 a Re = 200).
 
-Regenerar los documentos: `python reporte/build_pdf.py`, `python guia/build_pdf.py`, `python presentacion/build_slides.py`.
+Regenerar los documentos: `python reporte/build_pdf.py`, `python guia/build_pdf.py`, `cd presentacion `python presentacion/build_slides.py``python presentacion/build_slides.py` npm install `python presentacion/build_slides.py``python presentacion/build_slides.py` python render_eqs.py `python presentacion/build_slides.py``python presentacion/build_slides.py` node build_deck.js `python presentacion/build_slides.py``python presentacion/build_slides.py` python transiciones.py presentacion.pptx`.
