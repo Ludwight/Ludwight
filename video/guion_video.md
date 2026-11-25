@@ -27,7 +27,7 @@ Video para YouTube (la rúbrica pide de 1 a 3 min). Hay dos versiones en esta ca
 | 2:23–2:29 | Comparación con la literatura | Frente a la literatura, la diferencia es de dos por ciento o menos entre Reynolds doscientos y seiscientos. |
 | 2:29–2:39 | Conclusiones | En resumen: resolvimos Navier Stokes, reprodujimos la separación, la recirculación y el reacoplamiento, y validamos el resultado. Gracias. |
 
-Al subirlo a YouTube, poner el enlace nuevo en `reporte/reporte.md` (recuadro de la portada) y regenerar el PDF
+Al subirlo a YouTube, poner el enlace nuevo en `reporte/reporte.tex` (recuadro de la portada) y regenerar el PDF
 con `python reporte/build_pdf.py`.
 
 **Fuentes** (`fuentes/`): `grabar.js` graba JupyterLab con Playwright; `imagenes.py` hace la portada, la figura anotada

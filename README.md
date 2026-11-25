@@ -7,7 +7,7 @@ convección por promedio (segundo orden) y Adams–Bashforth en el tiempo. El ar
 | Entregable | Archivo |
 |---|---|
 | Código (Ejecutar todo: ~13 min con videos, ~5 min con `HACER_VIDEOS = False`) | `escalon_descendente.ipynb` |
-| Reporte escrito (PDF) | `reporte/reporte.pdf` (fuente: `reporte/reporte.md`) |
+| Reporte escrito (PDF) | `reporte/reporte.pdf` (fuente LaTeX: `reporte/reporte.tex`) |
 | Diapositivas (12, con transiciones y dos videos) | `presentacion/presentacion.pptx` (notas del orador con el reparto sugerido) |
 | Guía para estudiar el código línea por línea | `guia/guia_explicacion.pdf` |
 | Videos de la simulación (1080p) | `figures/arranque_re200.mp4`, `figures/comparacion_re.mp4` |
