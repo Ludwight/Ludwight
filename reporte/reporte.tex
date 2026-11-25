@@ -53,7 +53,7 @@
 \begin{center}
 \fcolorbox{verde}{fondo}{\begin{minipage}{0.86\textwidth}\small
 \textbf{Video (YouTube):} \url{https://youtu.be/kBtmlx2zd3A}\\[2pt]
-\textbf{Código:} \texttt{escalon\_descendente.ipynb} (Ejecutar todo: $\sim$13 min con videos, $\sim$5 min sin ellos)\\[2pt]
+\textbf{Código:} \texttt{escalon\_descendente.ipynb} (Ejecutar todo: $\sim$5 min con videos, $\sim$3 min sin ellos)\\[2pt]
 \textbf{Videos de la simulación:} \texttt{figures/arranque\_re200.mp4} y \texttt{figures/comparacion\_re.mp4}
 \end{minipage}}
 \end{center}
@@ -63,7 +63,7 @@ Se simula el flujo bidimensional, incompresible y laminar en un canal con un esc
 expansión 2, para números de Reynolds de 100 a 600. Las ecuaciones de Navier–Stokes se resuelven con un código propio
 en Python: volúmenes finitos de segundo orden en malla escalonada (MAC), método de proyección de Chorin con
 Adams–Bashforth de segundo orden y ecuación de Poisson para la presión resuelta por factorización LU dispersa. El código
-conserva la masa a precisión de máquina ($\max|\nabla\cdot\vu|\approx\num{8e-15}$) y su resultado cambia menos de
+conserva la masa a precisión de máquina ($\max|\nabla\cdot\vu|\approx\num{6e-15}$) y su resultado cambia menos de
 \SI{1}{\percent} al duplicar la malla. La longitud de reacoplamiento $x_r$ crece casi linealmente con $\Rey$
 ($x_r/S = 2.84,\ 4.91,\ 6.73,\ 8.26,\ 9.40,\ 10.06$ para $\Rey = 100$–600) y desde $\Rey\approx400$ aparece una burbuja
 secundaria en la pared superior. Se presenta un análisis paramétrico de viscosidad ($\Rey$), malla y paso de tiempo, se
@@ -354,14 +354,14 @@ funciones principales está en el anexo~\ref{sec:anexo-codigo}.
 El caso base se corre con \texttt{base = simular(RE, NY=NY, L=L)}. La salida del notebook es:
 \begin{lstlisting}[language={}, numbers=none]
 Re =  200 | NY =  20 | dt = 0.0167 | converge  en t =   43.5 (2608 pasos) | x_r/S = 4.91
-Divergencia máxima = 8.1e-15   (~ 0: la masa se conserva)
+Divergencia máxima = 5.8e-15   (~ 0: la masa se conserva)
 Reacoplamiento: x_r = 2.46 H = 4.91 alturas de escalón
 \end{lstlisting}
 
 \subsection{Campos estacionarios}
 Con 20 celdas por $H$ (6400 celdas con fluido) y $\Delta t=0.0167$, el estado estacionario se alcanza en
 $t=43.5\,H/U$ (2608 pasos, $\sim$\SI{3}{s} de CPU). El reacoplamiento ocurre en $x_r=2.46H$ ($x_r/S=4.91$) y la
-divergencia máxima final es \num{8.1e-15}.
+divergencia máxima final es \num{5.8e-15}.
 
 \begin{figure}[H]
 \centering
@@ -634,7 +634,7 @@ pip install numpy scipy matplotlib jupyter imageio-ffmpeg
 jupyter notebook escalon_descendente.ipynb      # Kernel -> Restart & Run All
 \end{lstlisting}
 Los parámetros de la demostración en vivo (\texttt{RE}, \texttt{NY}, \texttt{L}) están en el bloque~0. Con
-\texttt{HACER\_VIDEOS = False} el notebook se salta los videos y corre en $\sim$5 min. Las figuras se guardan en
+\texttt{HACER\_VIDEOS = False} el notebook se salta los videos y corre en $\sim$3 min. Las figuras se guardan en
 \texttt{figures/}.
 
 La correspondencia entre las funciones y el método está en la tabla~\ref{tab:funciones}.

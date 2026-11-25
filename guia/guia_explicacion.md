@@ -146,7 +146,7 @@ $(p_E-p_P)+(p_W-p_P)+(p_N-p_P)+(p_S-p_P)=b\,\Delta x^2$. Cada término es "el fl
 | `if vi == NX: A[k, k] -= 2` | A la derecha de la última columna está la salida, con $p=0$ en la cara, que está a **media** celda: $(0-p_P)/(\Delta x/2)$ → coeficiente −2. |
 | `elif vi >= 0 and 0 <= vj < NY and not solido[vi, vj]` | El vecino existe y tiene fluido: término $(p_{vec}-p_P)$ → +1 al vecino, −1 a la diagonal. |
 | (si no se cumple ninguno) | El vecino es pared, entrada o escalón, donde $\partial p/\partial n=0$: ese término vale cero y no se suma. |
-| `spla.splu(A.tocsc() / dx**2)` | Divide entre $\Delta x^2$, cambia a formato rápido y factoriza (LU). Devuelve un objeto con `.solve(b)`. |
+| `spla.splu(A.tocsc() / dx**2, permc_spec="MMD_AT_PLUS_A")` | Divide entre $\Delta x^2$, cambia a formato rápido y factoriza (LU). Devuelve un objeto con `.solve(b)`. `permc_spec` elige en qué orden se eliminan las incógnitas: con el orden MMD la LU tiene menos "relleno" (entradas nuevas distintas de cero) y cada solución es ~2 veces más rápida, con el mismo resultado. |
 
 ## B4. Condiciones de frontera: `fronteras(u, v, u_entrada, m)`
 
@@ -278,7 +278,7 @@ tener todo en el mismo punto y poder graficar. Dentro del escalón pone `NaN` ("
 $x_r(t)$ y $u$ junto al piso). La función interna `cuadro(q)` dibuja cada cuadro: avanza la tinta hasta el tiempo de la
 foto, redibuja el borde del remolino (`contour` de $u=0$), mueve la marca ▼ a $x_r$ y agrega un punto a la curva $x_r(t)$.
 Las fotos se eligen para hacer **cámara lenta** al principio (todas hasta $t=10$, después una de cada 2 y luego una de cada 4).
-`FFMpegWriter` junta los cuadros en un MP4.
+Para que sea rápido, lo que no cambia (ejes, textos, escalón, barras de color) se dibuja **una sola vez** y se guarda como fondo (`copy_from_bbox`). En cada cuadro se restaura ese fondo, se redibujan sólo las partículas, las líneas y la vorticidad (`draw_artist`) y la imagen se manda directo a ffmpeg por una tubería (`subprocess.Popen`), que la comprime en MP4. Así el video tarda ~45 s en vez de ~4 min.
 
 `mostrar_video` hace una copia de 960 px con ffmpeg y la incrusta en el notebook. `secuencia` usa la misma tinta para hacer
 la figura de fotos fijas del reporte.

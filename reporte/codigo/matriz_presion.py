@@ -17,4 +17,5 @@ def matriz_presion(m):
                     A[k, k] -= 2
                 elif vi >= 0 and 0 <= vj < NY and not solido[vi, vj]:         # vecino con fluido
                     A[k, vi * NY + vj] = 1; A[k, k] -= 1
-    return spla.splu(A.tocsc() / m["dx"]**2)
+    # factorización LU: se hace UNA vez y se reutiliza. El orden MMD reduce el "relleno" de la LU (solución ~2x más rápida)
+    return spla.splu(A.tocsc() / m["dx"]**2, permc_spec="MMD_AT_PLUS_A")

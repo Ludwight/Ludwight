@@ -155,7 +155,7 @@ const cab = (t) => celda(t, { bold: true, color: C.white, fill: { color: C.navy 
     texto(s, d, 1.3, y + 0.36, 3.9, 0.7, { fontSize: 13, color: C.grey });
   });
   tarjeta(s, 0.6, 6.25, 4.6, 0.55, C.paper);
-  texto(s, "2 608 pasos · ~3 s de cálculo · |∇·u|máx ≈ 8·10⁻¹⁵", 0.8, 6.36, 4.3, 0.35, { fontSize: 12, color: C.navy, bold: true });
+  texto(s, "2 608 pasos · ~3 s de cálculo · |∇·u|máx ≈ 6·10⁻¹⁵", 0.8, 6.36, 4.3, 0.35, { fontSize: 12, color: C.navy, bold: true });
   imagen(s, path.join(FIG, "campos_base.png"), 5.5, 1.5, 7.3, 5.2);
   s.addNotes("LUIS (1:15). Canal que se ensancha al doble → el fluido se frena → la presión sube (gradiente adverso, ∂p/∂x > 0) → el fluido lento junto a la pared se separa en la esquina. Remolino con u < 0; reacoplamiento donde τ_w = 0. Señalar la presión subiendo en la figura de abajo. Caso base Re = 200: x_r/S = 4.91. MARCO pregunta por qué es caso de prueba → geometría simple, todos los mecanismos, datos de Armaly (1983).");
 }
@@ -277,7 +277,7 @@ const cab = (t) => celda(t, { bold: true, color: C.white, fill: { color: C.navy 
     "                A[k, k] -= 2",
     "            elif vi >= 0 and 0 <= vj < NY and not solido[vi, vj]:",
     "                A[k, vi*NY + vj] = 1; A[k, k] -= 1   # vecino con fluido",
-    "return spla.splu(A.tocsc() / dx**2)      # LU: se factoriza una vez",
+    "return spla.splu(A.tocsc() / dx**2, permc_spec=\"MMD_AT_PLUS_A\")  # LU",
   ], 0.6, 1.45, 7.4, 3.7, 11);
   codigo(s, [
     "v[0, :] = -v[1, :]                  # entrada: v = 0 (espejo)",
@@ -443,7 +443,7 @@ const cab = (t) => celda(t, { bold: true, color: C.white, fill: { color: C.navy 
     texto(s, t, x + 1.35, y + 0.3, 4.4, 0.45, { fontSize: 17, bold: true, color: C.white });
     texto(s, d, x + 1.35, y + 0.8, 4.4, 1.2, { fontSize: 13, color: "C9D6E3" });
   });
-  texto(s, "Código: escalon_descendente.ipynb · Ejecutar todo (~13 min con videos, ~5 min sin ellos)", 0.6, 6.4, 12.1, 0.35,
+  texto(s, "Código: escalon_descendente.ipynb · Ejecutar todo (~5 min con videos, ~3 min sin ellos)", 0.6, 6.4, 12.1, 0.35,
     { fontSize: 12, color: "9FB0C4", align: "center" });
   texto(s, "¡Gracias! Preguntas", 0.6, 6.75, 12.1, 0.45, { fontFace: FUENTE_TITULO, fontSize: 20, bold: true,
     color: C.white, align: "center" });
