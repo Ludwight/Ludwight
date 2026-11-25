@@ -136,8 +136,7 @@ const cab = (t) => celda(t, { bold: true, color: C.white, fill: { color: C.navy 
     { fontSize: 16, color: C.white, paraSpaceAfter: 4 });
   texto(s, "Prof. Anuar Sánchez", 0.6, 6.3, 6.0, 0.4, { fontSize: 13, color: "9FB0C4" });
   imagen(s, path.join(EQ, "arranque_re200_portada.png"), 7.1, 2.0, 5.6, 3.6, false);
-  s.addNotes("Presentación del equipo (30 s). La exposición sigue el orden de la formulación: "
-    + "ecuaciones, condiciones, método, discretización, código, estabilidad y resultados.");
+  s.addNotes("AMBOS (0:30). LUIS: presentarse; simulación del flujo laminar sobre un escalón descendente con código propio en Python. MARCO: orden de la exposición: física y ecuaciones → método → código funcionando → cómo sabemos que es correcto.");
 }
 
 // ================= 2. Fenómeno y caso base =================
@@ -158,8 +157,7 @@ const cab = (t) => celda(t, { bold: true, color: C.white, fill: { color: C.navy 
   tarjeta(s, 0.6, 6.25, 4.6, 0.55, C.paper);
   texto(s, "2 608 pasos · ~3 s de cálculo · |∇·u|máx ≈ 8·10⁻¹⁵", 0.8, 6.36, 4.3, 0.35, { fontSize: 12, color: C.navy, bold: true });
   imagen(s, path.join(FIG, "campos_base.png"), 5.5, 1.5, 7.3, 5.2);
-  s.addNotes("Velocidad con líneas de corriente, vorticidad y presión. La línea discontinua marca el reacoplamiento. "
-    + "Explicar el origen de la separación con el gradiente adverso.");
+  s.addNotes("LUIS (1:15). Canal que se ensancha al doble → el fluido se frena → la presión sube (gradiente adverso, ∂p/∂x > 0) → el fluido lento junto a la pared se separa en la esquina. Remolino con u < 0; reacoplamiento donde τ_w = 0. Señalar la presión subiendo en la figura de abajo. Caso base Re = 200: x_r/S = 4.91. MARCO pregunta por qué es caso de prueba → geometría simple, todos los mecanismos, datos de Armaly (1983).");
 }
 
 // ================= 3. Ecuaciones de gobierno =================
@@ -182,8 +180,7 @@ const cab = (t) => celda(t, { bold: true, color: C.white, fill: { color: C.navy 
   texto(s, "Supuestos", 9.25, 4.25, 3.3, 0.3, { fontSize: 13, bold: true, color: C.teal });
   lista(s, ["2D, incompresible, newtoniano", "Isotérmico y laminar (Re ≤ 600)", "Sin gravedad: sólo añade presión hidrostática",
     "Un único parámetro: Re = UH/ν"], 9.25, 4.6, 3.3, 2.1, 12);
-  s.addNotes("Ecuaciones de la clase en forma adimensional con U, H y ρU². Un solo parámetro: Re. "
-    + "Variar ν equivale a variar Re; por eso el análisis paramétrico es sobre la viscosidad.");
+  s.addNotes("LUIS (1:45). Continuidad: ∇·u = 0. Navier–Stokes adimensional con H, U, ρU² → un solo parámetro Re = UH/ν; ν = 1/Re: variar la viscosidad = variar Re. Forma conservativa: (u·∇)u = ∇·(uu) − u(∇·u), el último término es cero; el momento que sale de una celda entra a la vecina. Supuestos: 2D, newtoniano, isotérmico, laminar (Re ≤ 600, transición ~1200), sin gravedad. MARCO: ¿la presión no tiene ecuación? → es la que hace cumplir continuidad.");
 }
 
 // ================= 4. Condiciones iniciales y de frontera =================
@@ -210,8 +207,7 @@ const cab = (t) => celda(t, { bold: true, color: C.white, fill: { color: C.navy 
       texto(s, nota, x + 0.3, y + 1.15, 5.4, 0.4, { fontSize: 11, color: C.grey });
     }
   });
-  s.addNotes("Se impone u = v = 0 en las paredes sólidas (no deslizamiento). La presión tiene condición de Neumann "
-    + "en las paredes; en la salida se fija p = 0. La entrada está en x = −2H, un canal de longitud 2H antes del escalón.");
+  s.addNotes("LUIS (1:30). CI: reposo, se avanza hasta el estado estacionario. Entrada x = −2H: Poiseuille 6Uη(1−η); el 6 da media U, máxima 1.5U. No deslizamiento en piso, techo y escalón. Salida: flujo desarrollado y p = 0 (canal hasta 25H). Presión: Neumann en paredes; p = 0 en la salida da solución única. Pasar la palabra: «Marco, ¿cómo lo resolvemos?»");
 }
 
 // ================= 5. Método de proyección =================
@@ -239,8 +235,7 @@ const cab = (t) => celda(t, { bold: true, color: C.white, fill: { color: C.navy 
   texto(s, "Sumando los pasos 1 y 3 se recupera la ecuación de cantidad de movimiento discretizada en el tiempo. "
     + "La presión no tiene ecuación propia: es el multiplicador que impone la continuidad.", 0.95, 6.25, 11.5, 0.5,
     { fontSize: 12, color: "C9D6E3" });
-  s.addNotes("Derivar el paso 2: aplicar ∇· al paso 3 y usar ∇·uⁿ⁺¹ = 0 da ∇²pⁿ⁺¹ = ∇·u*/Δt. "
-    + "La matriz de este sistema no cambia en el tiempo, así que se factoriza una sola vez.");
+  s.addNotes("MARCO (1:45). Tres incógnitas y la presión sin ecuación de evolución. Paso 1: u* sin presión, Adams–Bashforth (3/2 Aⁿ − 1/2 Aⁿ⁻¹). Paso 2: pedir ∇·uⁿ⁺¹ = 0 en uⁿ⁺¹ = u* − Δt∇p → Poisson ∇²p = ∇·u*/Δt. Paso 3: corregir. Pasos 1 + 3 = Navier–Stokes discretizada. LUIS: ¿por qué no Euler? → explota a los 706 pasos; AB2 cuesta lo mismo.");
 }
 
 // ================= 6. Discretización espacial =================
@@ -264,8 +259,7 @@ const cab = (t) => celda(t, { bold: true, color: C.white, fill: { color: C.navy 
   });
   texto(s, "Orden formal de la discretización: segundo orden en Δx. Comprobado en el estudio de malla (diapositiva 9).",
     6.1, 6.7, 6.6, 0.3, { fontSize: 11, color: C.navy, bold: true });
-  s.addNotes("La convección y la difusión son de segundo orden. Con Adams–Bashforth el esquema también es de segundo orden "
-    + "en el tiempo. Con convección centrada y Euler simple el esquema diverge: por eso usamos AB2.");
+  s.addNotes("MARCO (1:45). Celdas cuadradas; malla escalonada: p en el centro, u y v en las caras → cada velocidad entre dos presiones, sin tablero de ajedrez. Difusión: 5 puntos. Convección conservativa con promedio en las caras: segundo orden (upwind acortaría la burbuja). Poisson: vecino pared no se suma (Neumann); salida a media celda → −2. Escalón = celdas sólidas.");
 }
 
 // ================= 7. Código I =================
@@ -300,8 +294,7 @@ const cab = (t) => celda(t, { bold: true, color: C.white, fill: { color: C.navy 
     "La matriz no depende de Δt ni del tiempo: LU se calcula una sola vez y cada paso sólo resuelve.",
     "En la fila 'fantasma' el espejo impone la condición: el promedio en la pared da el valor deseado.",
   ], 8.4, 1.9, 4.3, 5.0, 12);
-  s.addNotes("Explicar la numeración k = i·NY + j y la estructura dispersa de A. "
-    + "La LU es la eliminación gaussiana guardada: un solo costo de factorización para todos los pasos.");
+  s.addNotes("MARCO (1:15). Código real del notebook. k = i·NY + j; cada fila es la ecuación de una celda; sólida → trivial; salida → −2; vecino con fluido → +1 / −1. La matriz no cambia en el tiempo → LU una sola vez. Fronteras con celdas fantasma: fantasma = −nodo → promedio cero en la pared. LUIS: el no deslizamiento queda a media celda.");
 }
 
 // ================= 8. Código II =================
@@ -335,8 +328,7 @@ const cab = (t) => celda(t, { bold: true, color: C.white, fill: { color: C.navy 
   });
   texto(s, "Cada iteración es un Δt. Los pasos 1 a 3 ocurren en ese orden, y la masa se verifica al final del ciclo.",
     8.4, 6.45, 4.3, 0.5, { fontSize: 11, color: C.navy, bold: true });
-  s.addNotes("Recorrer el ciclo: la aceleración se calcula con el estado actual, después se predice, se resuelve Poisson "
-    + "y se corrige. La condición de paro usa el residuo normalizado por Δt.");
+  s.addNotes("MARCO (1:00). Cada línea es una ecuación: aceleración, paso 1 con AB2, divergencia de u*, paso 2 (Poisson), paso 3 (diferencias de p en las caras). Residuo < 1e-4 → estado estacionario. «Ahora lo vemos correr.» → DEMO (2:30): RE = 400 (8.26, ~8 s, burbuja del techo 4.2–4.5); simular(200, dt=(H/20)/1.5, t_max=150) explota en 36 pasos; simular(200, ab2=False, t_max=150) explota en 706. Regresar RE = 200.");
 }
 
 // ================= 9. Estabilidad y convergencia =================
@@ -375,8 +367,7 @@ const cab = (t) => celda(t, { bold: true, color: C.white, fill: { color: C.navy 
     ["1.00", "diverge en 36 pasos", "—"], ["Euler, 0.50", "diverge en 706 pasos", "—"],
   ], { x: 6.9, y: 5.55, w: 5.8, colW: [1.7, 2.7, 1.4], fontFace: FUENTE_TEXTO, fontSize: 11, color: C.ink,
     rowH: 0.22, border: { type: "solid", pt: 0.5, color: C.line }, margin: [0.02, 0.08, 0.02, 0.08], valign: "middle" });
-  s.addNotes("Estabilidad: CFL (convectiva) y Fourier (difusiva). Convergencia: el orden observado sale de tres mallas con "
-    + "razón de refinamiento 2; la extrapolación de Richardson da x∞/S = 4.954.");
+  s.addNotes("LUIS (1:30). CFL: Δt ≤ Δx/|u|max = 0.05/1.5 = 0.033; difusivo 0.125 → manda CFL; usamos la mitad. 0.25/0.5/0.8 → 4.914 idéntico; 1.0 explota (lo vimos). Malla 10/20/40 → 4.754/4.914/4.946; orden observado log2(0.160/0.032) ≈ 2.3; Richardson 4.95 → error 0.8 % con 20 celdas. MARCO: ¿y la masa? → divergencia ~1e-15.");
 }
 
 // ================= 10. Análisis paramétrico: viscosidad =================
@@ -397,8 +388,7 @@ const cab = (t) => celda(t, { bold: true, color: C.white, fill: { color: C.navy 
   eq(s, "tauw", 8.5, 4.95, 4.1, 0.45);
   texto(s, "Mayor Re → menor ν → burbuja más larga, casi lineal hasta Re ≈ 400.", 8.3, 5.9, 4.4, 0.6,
     { fontSize: 12, color: C.grey });
-  s.addNotes("Variar ν = 1/Re. Re = 100 se calma hacia t ≈ 20; Re = 600 forma vórtices que viajan y una burbuja en el techo. "
-    + "Cada caso se corrió hasta cumplir el criterio de convergencia de la diapositiva 9.");
+  s.addNotes("MARCO (1:30). Reproducir el video: Re 100, 300, 600 desde el reposo; tinta = partículas arrastradas. x_r/S de 2.84 a 10.06: menos viscosidad → la difusión transmite el momento al piso más lento. Casi lineal hasta 400; después la burbuja del techo empuja el chorro hacia abajo. LUIS: el tiempo al estacionario crece de 20 a 289.");
 }
 
 // ================= 11. Validación =================
@@ -432,7 +422,7 @@ const cab = (t) => celda(t, { bold: true, color: C.white, fill: { color: C.navy 
     + "es del orden de la dispersión entre estudios publicados.", 8.2, 4.7, 4.5, 1.4, { fontSize: 12, color: C.grey });
   texto(s, "Referencia de la tabla: arXiv:2507.16509 (Tabla 1). Concuerda con Armaly et al. (1983) hasta Re ≈ 400.",
     8.2, 6.2, 4.5, 0.6, { fontSize: 10, color: "8A96A6" });
-  s.addNotes("La comparación es con simulaciones 2D publicadas del mismo problema; no con la solución exacta, que no existe.");
+  s.addNotes("LUIS (1:00). Simulaciones 2D publicadas: ≤ 2 % entre Re 200 y 600; 5 % en Re 100. Error de malla < 1 % → la diferencia es del orden de la dispersión entre estudios (canal de entrada, dominio). Remolino del techo desde Re ≈ 400, como la literatura.");
 }
 
 // ================= 12. Conclusiones =================
@@ -457,7 +447,7 @@ const cab = (t) => celda(t, { bold: true, color: C.white, fill: { color: C.navy 
     { fontSize: 12, color: "9FB0C4", align: "center" });
   texto(s, "¡Gracias! Preguntas", 0.6, 6.75, 12.1, 0.45, { fontFace: FUENTE_TITULO, fontSize: 20, bold: true,
     color: C.white, align: "center" });
-  s.addNotes("Cierre (1 min). Tener el notebook abierto para responder preguntas sobre el código.");
+  s.addNotes("AMBOS (0:45). LUIS: formulación y verificación: estable dentro del CFL, segundo orden, error de malla < 1 %. MARCO: proyección en malla escalonada, masa conservada, física reproducida, ≤ 2 % frente a la literatura. Gracias; preguntas.");
 }
 
 pres.writeFile({ fileName: path.join(AQUI, "presentacion.pptx") }).then((f) => console.log("escrito", f));
