@@ -1,13 +1,13 @@
 ---
 title: "Flujo laminar sobre un escalón descendente: simulación numérica con el método de proyección"
 subtitle: "Mecánica de Fluidos · Proyecto final · Prof. Anuar Sánchez"
-author: "[Integrante 1] · [Integrante 2] · [Integrante 3] · [Integrante 4]"
+author: "Luis Antonio Pérez Hernández · Marco Antonio Navarrete Baños"
 date: "Noviembre 2026"
 lang: es
 ---
 
 <div class="video">
-**Video (YouTube):** <https://www.youtube.com/shorts/1UjPvbtYBLU>  
+**Video (YouTube):** <https://youtu.be/kBtmlx2zd3A>  
 **Código:** `escalon_descendente.ipynb` (Ejecutar todo: ~13 min con videos, ~5 min sin ellos)  
 **Videos de la simulación:** `figures/arranque_re200.mp4` y `figures/comparacion_re.mp4` · **Video del proyecto (2:39):** `video/video_proyecto.mp4`
 </div>

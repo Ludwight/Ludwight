@@ -97,7 +97,7 @@ for k, (txt, size, bold) in enumerate([
         ("Navier–Stokes 2D · método de proyección en 3 pasos · tinta virtual · análisis paramétrico", 22, False),
         ("", 12, False),
         ("Mecánica de Fluidos · Proyecto final · Prof. Anuar Sánchez", 20, False),
-        ("[Integrante 1] · [Integrante 2] · [Integrante 3] · [Integrante 4]", 20, False)]):
+        ("Luis Antonio Pérez Hernández · Marco Antonio Navarrete Baños", 20, False)]):
     p = tf.paragraphs[0] if k == 0 else tf.add_paragraph()
     p.text = txt; p.font.size = Pt(size); p.font.bold = bold; p.font.color.rgb = RGBColor(255, 255, 255)
 pic(s, FIG / "campos_base.png", 7.2, 4.9, h=2.4).crop_bottom = 0.66
