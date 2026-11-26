@@ -47,6 +47,14 @@ ECUACIONES = {
     "orden": r"p=\log_2\frac{x_{10}-x_{20}}{x_{20}-x_{40}}\approx 2.3,\qquad x_\infty\approx x_{40}+\frac{x_{40}-x_{20}}{2^{p}-1}",
     "tauw": r"\tau_w=\mu\left.\frac{\partial u}{\partial y}\right|_{y=0}=0\quad\text{en el reacoplamiento}",
     "vort": r"\omega=\frac{\partial v}{\partial x}-\frac{\partial u}{\partial y}",
+    # ---- versión simple de la presentación ----
+    "ns_simple": r"\underbrace{\frac{\partial\mathbf{u}}{\partial t}+(\mathbf{u}\cdot\nabla)\mathbf{u}}_{\text{aceleración}}"
+                 r"=\underbrace{-\nabla p}_{\text{presión}}+\underbrace{\frac{1}{Re}\nabla^2\mathbf{u}}_{\text{viscosidad}}",
+    "cont_simple": r"\underbrace{\nabla\cdot\mathbf{u}=0}_{\text{no se crea ni se pierde masa}}",
+    "re_def": r"Re=\frac{U\,H}{\nu}",
+    "entrada_simple": r"u=6U\,\eta\,(1-\eta)",
+    "paso1_simple": r"\mathbf{u}^*=\mathbf{u}^n+\Delta t\,\mathbf{A}",
+    "deriv_simple": r"\frac{\partial u}{\partial x}\approx\frac{u_{i+1}-u_i}{\Delta x}",
 }
 
 PREAMBULO = r"""\documentclass[varwidth=true,border=2pt]{standalone}

@@ -18,21 +18,17 @@
 \definecolor{coral}{RGB}{242,107,58}
 \definecolor{fondo}{RGB}{238,243,248}
 \setlist{itemsep=1pt, topsep=3pt}
-\titleformat{\section}{\large\bfseries\color{marino}}{\thesection.}{0.6em}{}
+\titleformat{\section}{\large\bfseries\color{marino}}{}{0em}{}
 \lstset{language=Python, basicstyle=\ttfamily\small, backgroundcolor=\color{fondo}, frame=none,
   columns=fullflexible, keepspaces=true, xleftmargin=1em, framexleftmargin=0.6em}
 
-\newcommand{\vu}{\mathbf{u}}
-\newcommand{\Rey}{\mathit{Re}}
-% --- diálogo
 \newcommand{\habla}[3]{\par\noindent\hangindent=4.6em\hangafter=1%
   \makebox[4.6em][l]{\textbf{\textcolor{#1}{#2:}}}#3\par\medskip}
 \newcommand{\luis}[1]{\habla{marino}{Luis}{#1}}
 \newcommand{\marco}[1]{\habla{verde}{Marco}{#1}}
 \newcommand{\accion}[1]{\par\noindent{\small\itshape\color{gray}[#1]}\par\medskip}
-\newcommand{\lee}[1]{\par\noindent{\small\color{coral}\textbf{Se lee:} #1}\par\medskip}
-\newcommand{\diapo}[4]{\vspace{0.6em}\par\noindent\colorbox{fondo}{\parbox{\dimexpr\linewidth-2\fboxsep}{%
-  \textbf{\color{marino}Diapositiva #1 · #2}\hfill{\small #3 · #4}}}\par\medskip}
+\newcommand{\diapo}[3]{\vspace{0.5em}\par\noindent\colorbox{fondo}{\parbox{\dimexpr\linewidth-2\fboxsep}{%
+  \textbf{\color{marino}Diapositiva #1 · #2}\hfill{\small #3}}}\par\medskip}
 
 \title{\textbf{Guion de la exposición}\\[2pt]\large Flujo laminar sobre un escalón descendente}
 \author{Luis Antonio Pérez Hernández \and Marco Antonio Navarrete Baños\\[4pt]
@@ -43,313 +39,206 @@
 \maketitle
 \vspace{-1.5em}
 
-\section*{Cómo usar este guion}
+\section*{Cómo usarlo}
 \begin{itemize}
-  \item El diálogo sale del reporte (\texttt{reporte/reporte.pdf}); cada diapositiva indica la sección del reporte de
-    donde viene, por si quieren repasar más a fondo.
-  \item \textbf{No es para leerlo.} La rúbrica penaliza la ``lectura literal de diapositivas''. Úsenlo para ensayar:
-    lean una vez, luego digan cada bloque con sus palabras mirando sólo la diapositiva. Lo esencial está en
-    \textbf{negritas}.
-  \item Duración planeada: \textbf{18 min} (la rúbrica pide de 15 a 20). Si van tarde, recorten las frases marcadas
-    como \emph{opcional}.
-  \item Cada quien expone una parte técnica completa (requisito de la participación individual):
-    \textbf{Luis}, la formulación física y la verificación; \textbf{Marco}, el método numérico, el código y la
-    demostración.
-  \item Las notas del orador del PowerPoint tienen una versión corta de este guion (vista del moderador).
+  \item Es un diálogo sencillo para ensayar. \textbf{No lo lean en voz alta}: léanlo un par de veces y luego díganlo con sus
+    palabras mirando la diapositiva. Lo más importante está en \textbf{negritas}.
+  \item Sigue las cinco partes de la rúbrica: física del fenómeno, idea matemática, metodología y código, resultados y
+    conclusiones.
+  \item Duración: \textbf{unos 18 minutos} (la rúbrica pide de 15 a 20). Luis expone la física y la estabilidad; Marco, el
+    método, el código y la demostración.
+  \item Las notas del orador del PowerPoint tienen un resumen de lo que dice cada quien.
 \end{itemize}
 
 \begin{table}[h]
 \centering\small
-\caption{Reparto y tiempos.}
 \begin{tabular}{@{}rlll@{}}
 \toprule
-& Diapositiva & Quién expone & Tiempo\\
+& Diapositiva & Quién & Tiempo\\
 \midrule
 1 & Portada & Ambos & 0:30\\
-2 & El fenómeno y el caso base & Luis & 1:15\\
-3 & Ecuaciones de gobierno & Luis & 1:45\\
-4 & Condiciones iniciales y de frontera & Luis & 1:30\\
-5 & Método de proyección & Marco & 1:45\\
-6 & Discretización espacial & Marco & 1:45\\
-7 & Código I: Poisson y fronteras & Marco & 1:15\\
-8 & Código II: ciclo de tres pasos & Marco & 1:00\\
--- & \textbf{Demostración en vivo (Jupyter)} & Marco opera, Luis comenta & 2:30\\
-9 & Estabilidad y convergencia & Luis & 1:30\\
-10 & Análisis paramétrico: viscosidad & Marco & 1:30\\
-11 & Validación & Luis & 1:00\\
-12 & Conclusiones & Ambos & 0:45\\
+2 & ¿Qué estudiamos? & Luis & 1:30\\
+3 & Variables y parámetros & Luis & 1:15\\
+4 & Ecuaciones y supuestos & Luis & 1:30\\
+5 & Condiciones iniciales y de frontera & Luis & 1:30\\
+6 & De ecuaciones a números: la malla & Marco & 1:30\\
+7 & El método: tres pasos & Marco & 1:30\\
+8 & El código en Python & Marco & 1:15\\
+-- & \textbf{Demostración en Jupyter} & Marco opera, Luis comenta & 2:15\\
+9 & Caso base & Marco & 1:15\\
+10 & Viscosidad & Marco & 1:30\\
+11 & Estabilidad: paso de tiempo y malla & Luis & 1:30\\
+12 & Conclusiones & Ambos & 1:00\\
 \midrule
-& & \textbf{Total} & \textbf{18:00}\\
+& & \textbf{Total} & \textbf{$\sim$18 min}\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\section*{Antes de empezar (5 minutos antes)}
+\section*{Antes de empezar}
 \begin{enumerate}
-  \item Abrir \texttt{presentacion/presentacion.pptx} en modo presentación con vista del moderador (notas visibles).
-  \item Abrir \texttt{escalon\_descendente.ipynb} en Jupyter, poner \texttt{HACER\_VIDEOS = False} en el bloque~0 y
-    ejecutar las celdas \textbf{desde el inicio hasta la sección 4 (caso base) inclusive}: tarda menos de 10~s. Así las
-    funciones ya están cargadas para la demostración.
-  \item Dejar Jupyter en la celda de parámetros, en otra ventana, para cambiar rápido.
+  \item Abrir \texttt{presentacion/presentacion.pptx} en modo presentación (con la vista del moderador se ven las notas).
+  \item Abrir \texttt{escalon\_descendente.ipynb} en Jupyter, poner \texttt{HACER\_VIDEOS = False} y ejecutar las celdas
+    \textbf{desde el inicio hasta la sección 4 (caso base)}. Tarda menos de 10 segundos.
 \end{enumerate}
 
 % =====================================================================
-\section{Presentación}
-\diapo{1}{Portada}{Ambos}{0:30}
-
-\luis{Buenos días. Somos Luis Antonio Pérez y Marco Antonio Navarrete. Nuestro proyecto es la simulación del
-\textbf{flujo laminar sobre un escalón descendente}: resolvimos las ecuaciones de Navier–Stokes en dos dimensiones con un
-código propio en Python.}
-
-\marco{La exposición sigue el orden en que se construye una simulación: \textbf{la física y las ecuaciones, el método
-numérico, el código funcionando y, al final, cómo sabemos que el resultado es correcto}. Luis empieza con el fenómeno.}
+\diapo{1}{Portada}{Ambos · 0:30}
+\luis{Buenos días. Somos Luis Pérez y Marco Navarrete. Hicimos un programa en Python que simula \textbf{cómo fluye un
+fluido cuando pasa por un escalón}.}
+\marco{Vamos a explicar el problema físico, las ecuaciones, cómo lo resolvemos en la computadora, los resultados y lo que
+concluimos.}
 
 % =====================================================================
-\section{Problema físico y formulación (Luis)}
-\diapo{2}{El fenómeno y el caso base}{Luis · reporte §1 y §4}{1:15}
+\section*{1. Física del fenómeno (Luis)}
+\diapo{2}{¿Qué estudiamos?}{Luis · 1:30}
+\luis{En esta simulación modelamos numéricamente \textbf{el flujo de un fluido viscoso que pasa por un escalón}: el canal
+se ensancha de golpe al doble.}
+\accion{Señalar la figura.}
+\luis{Pasan tres cosas. Uno: en la esquina el fluido \textbf{no puede dar la vuelta y se separa} de la pared. Dos: detrás
+del escalón queda un \textbf{remolino}, donde el fluido gira y regresa. Tres: más adelante el fluido \textbf{se vuelve a
+pegar} al piso, en el punto de reacoplamiento.}
+\luis{¿Por qué se separa? Al ensancharse el canal, el fluido se frena y \textbf{la presión sube}. El fluido que va pegado a
+la pared es lento y no puede avanzar contra esa presión, así que se despega. Lo que medimos es \textbf{qué tan largo es el
+remolino}.}
 
-\luis{Un fluido viaja por un canal y encuentra un escalón: el canal se \textbf{ensancha al doble}. Al ensancharse, el
-fluido se frena y, como en Bernoulli, \textbf{la presión sube}: es un gradiente de presión adverso,
-$\partial p/\partial x>0$. El fluido pegado a la pared es lento y no tiene inercia para avanzar contra ese aumento de
-presión, así que \textbf{se separa en la esquina}.}
-\accion{Señalar la figura de arriba (velocidad).}
-\luis{Debajo queda un \textbf{remolino} donde la velocidad es negativa, y más adelante el flujo vuelve a pegarse al piso
-en el \textbf{punto de reacoplamiento}, donde el esfuerzo cortante en la pared es cero. En la figura de abajo se ve la
-presión subiendo después del escalón. En nuestro caso base, con Reynolds 200, el remolino mide \textbf{4.91 alturas de
-escalón}.}
-
-\marco{¿Y por qué es un caso de prueba tan usado?}
-
-\luis{Porque la geometría es simple pero tiene todos los mecanismos de un flujo separado: separación, capa de corte,
-recirculación y reacoplamiento. Y hay experimentos, como los de Armaly en 1983, y muchas simulaciones para comparar.}
-
-% ---------------------------------------------------------------------
-\diapo{3}{Ecuaciones de gobierno}{Luis · reporte §2.1–2.4}{1:45}
-
-\luis{Las ecuaciones son las de clase. La primera es \textbf{continuidad}: como el fluido es incompresible, la
-divergencia de la velocidad es cero; no se crea ni se pierde masa.}
-\lee{``divergencia de $\vu$ igual a cero''.}
-\luis{Las otras dos son \textbf{Navier–Stokes} en $x$ y en $y$: aceleración local más convección igual a menos el
-gradiente de presión más la difusión viscosa. Las escribimos \textbf{adimensionales}: longitudes entre $H$, velocidades
-entre la velocidad media de entrada $U$ y presión entre $\rho U^2$. Así queda \textbf{un solo parámetro, el número de
-Reynolds}, $\Rey=UH/\nu$. Con $U$ y $H$ iguales a uno, $\nu=1/\Rey$: \textbf{variar la viscosidad es lo mismo que variar
-Reynolds}.}
-\lee{``$\partial u/\partial t$ más $\partial(u^2)/\partial x$ más $\partial(uv)/\partial y$ igual a menos
-$\partial p/\partial x$ más uno sobre Re por el laplaciano de $u$''.}
-\luis{Usamos la \textbf{forma conservativa}: en lugar de $u\,\partial u/\partial x$ escribimos $\partial(u^2)/\partial x$.
-Es lo mismo gracias a continuidad, porque $(\vu\cdot\nabla)\vu=\nabla\cdot(\vu\vu)-\vu(\nabla\cdot\vu)$ y el último
-término es cero. La ventaja es que al discretizar, \textbf{el momento que sale de una celda es exactamente el que entra a la
-vecina}.}
-\luis{Los supuestos: flujo 2D, incompresible, newtoniano, isotérmico y \textbf{laminar}, porque trabajamos hasta Reynolds
-600 y la transición en este flujo es alrededor de 1200. La gravedad la omitimos porque sólo agrega una presión
-hidrostática que no cambia el movimiento.}
-
-\marco{Entonces la presión no tiene una ecuación propia.}
-
-\luis{Exacto: en incompresible no hay ecuación de estado. \textbf{La presión es la que haga falta para que se cumpla
-continuidad}. Eso es justo lo que resuelve el método que va a explicar Marco.}
-
-% ---------------------------------------------------------------------
-\diapo{4}{Condiciones iniciales y de frontera}{Luis · reporte §2.5}{1:30}
-
-\luis{La \textbf{condición inicial} es el fluido en reposo; avanzamos en el tiempo hasta que el flujo deja de cambiar, que
-es el estado estacionario.}
-\luis{En la \textbf{entrada}, a dos alturas antes del escalón, ponemos el \textbf{perfil parabólico de Poiseuille}, que
-es la solución exacta para un canal largo: $u=6U\eta(1-\eta)$. El 6 sale de pedir que la velocidad media sea $U$, porque
-la integral de $6\eta(1-\eta)$ de 0 a 1 vale uno; la máxima es $1.5U$. \emph{Opcional:} el canal de entrada deja que el
-perfil se deforme antes de la esquina; sin él, la burbuja sale cerca de 8\,\% más larga.}
-\luis{En \textbf{todas las paredes sólidas}, piso, techo y las dos caras del escalón, \textbf{no deslizamiento}:
-$u=v=0$. En la \textbf{salida} suponemos flujo desarrollado, derivadas en $x$ iguales a cero, y fijamos $p=0$ como
-referencia. Por eso el canal debe ser más largo que el remolino: usamos hasta 25 alturas.}
-\luis{Para la presión, en las paredes la condición es de \textbf{Neumann}, $\partial p/\partial n=0$, que sale de evaluar
-Navier–Stokes donde la velocidad es cero. Y el $p=0$ de la salida hace que el sistema de la presión tenga solución única.
-Con esto el problema está planteado matemáticamente. Marco, ¿cómo lo resolvemos?}
+\diapo{3}{Variables y parámetros}{Luis · 1:15}
+\luis{Lo que calculamos son \textbf{la velocidad}, $u$ y $v$, y \textbf{la presión}, $p$, en cada punto y en cada instante.}
+\luis{El modelo tiene \textbf{un solo parámetro físico: el número de Reynolds}, $\mathit{Re}=UH/\nu$, que compara la
+inercia con la viscosidad. Como usamos $U$ y $H$ iguales a uno, \textbf{bajar la viscosidad es lo mismo que subir
+Reynolds}. Probamos de 100 a 600.}
+\luis{Y hay dos parámetros que elegimos para calcular: el \textbf{tamaño de cada celda}, $\Delta x$, y el \textbf{paso de
+tiempo}, $\Delta t$.}
 
 % =====================================================================
-\section{Método numérico y código (Marco)}
-\diapo{5}{Método de proyección de Chorin}{Marco · reporte §3.2}{1:45}
+\section*{2. Idea matemática (Luis)}
+\diapo{4}{Ecuaciones de gobierno y supuestos}{Luis · 1:30}
+\luis{Usamos las ecuaciones de clase. La primera es \textbf{continuidad}: no se crea ni se pierde masa.}
+\luis{La segunda es \textbf{Navier–Stokes}, que es como $F=ma$ para un fluido: \textbf{la aceleración del fluido se debe a
+la presión y a la viscosidad}. Al escribirla sin unidades, la viscosidad aparece como uno entre Reynolds.}
+\luis{Los supuestos: el flujo es \textbf{2D} porque el canal es muy ancho; \textbf{incompresible}, la densidad no cambia;
+\textbf{newtoniano}, la viscosidad es constante; \textbf{laminar}, porque trabajamos hasta Reynolds 600; y sin gravedad,
+que sólo agregaría presión hidrostática.}
 
-\marco{El problema es que tenemos tres incógnitas, $u$, $v$ y $p$, y la presión no tiene ecuación de evolución. El
-\textbf{método de proyección de Chorin}, de 1968, separa cada paso de tiempo en tres pasos.}
-\marco{\textbf{Paso uno:} calculamos una \textbf{velocidad de prueba} $\vu^*$ con convección y difusión, pero sin la
-presión. Para avanzar en el tiempo usamos \textbf{Adams–Bashforth}: la aceleración a la mitad del paso se estima con la
-actual y la anterior, tres medios de la de ahora menos un medio de la anterior.}
-\lee{``$\vu^*$ igual a $\vu^n$ más $\Delta t$ por tres medios de $A^n$ menos un medio de $A^{n-1}$''.}
-\marco{\textbf{Paso dos:} esa velocidad no cumple continuidad. Queremos que $\vu^{n+1}=\vu^*-\Delta t\nabla p$ tenga
-divergencia cero. Aplicamos divergencia a esa ecuación y queda la \textbf{ecuación de Poisson para la presión}: el
-laplaciano de $p$ igual a la divergencia de $\vu^*$ entre $\Delta t$.}
-\lee{``laplaciano de $p^{n+1}$ igual a divergencia de $\vu^*$ entre $\Delta t$''.}
-\marco{\textbf{Paso tres:} corregimos la velocidad con el gradiente de esa presión, y ahora sí la divergencia es cero.
-Si sumas el paso uno y el tres, \textbf{recuperas Navier–Stokes discretizada en el tiempo}.}
-
-\luis{¿Por qué Adams–Bashforth y no Euler, que es más simple?}
-
-\marco{Lo probamos: con Euler y convección centrada los errores crecen un poco en cada paso y \textbf{la solución explota
-a los 706 pasos}, aunque el paso de tiempo sea la mitad del límite. Adams–Bashforth cuesta lo mismo, porque la
-aceleración anterior ya está calculada, y es estable. Lo van a ver en la demostración.}
-
-% ---------------------------------------------------------------------
-\diapo{6}{Discretización espacial}{Marco · reporte §3.1 y §3.3}{1:45}
-
-\marco{Para resolverlo en la computadora partimos el canal en \textbf{celdas cuadradas} y cambiamos cada derivada por una
-diferencia. Usamos una \textbf{malla escalonada}: la presión vive en el centro de cada celda y las velocidades en las
-caras.}
-\accion{Señalar el dibujo de la malla.}
-\marco{¿Por qué? Porque así \textbf{la velocidad de cada cara queda justo entre dos presiones}, y la fuerza de presión
-que la empuja es simplemente la diferencia de esas dos. Si todo estuviera en el mismo punto, la presión podría oscilar
-en tablero de ajedrez sin que el método lo notara.}
-\marco{La \textbf{difusión} es el laplaciano de cinco puntos: los cuatro vecinos menos cuatro veces el centro, entre
-$\Delta x^2$. La \textbf{convección} va en forma conservativa, lo que sale menos lo que entra, y el valor en cada cara es
-el \textbf{promedio de los dos vecinos}. Las dos son de \textbf{segundo orden}: al duplicar la malla el error baja unas
-cuatro veces. \emph{Opcional:} un esquema \emph{upwind} sería más estable, pero agrega una viscosidad artificial que
-acorta la burbuja.}
-\marco{La ecuación de Poisson queda así: para cada celda, la suma de las diferencias con sus vecinos es igual al lado
-derecho. Si el vecino es pared, no se suma, que es la condición de Neumann. En la salida la cara está a media celda con
-$p=0$, y eso da un coeficiente de menos dos. El escalón es simplemente un \textbf{bloque de celdas sólidas}.}
-
-% ---------------------------------------------------------------------
-\diapo{7}{Código I: matriz de Poisson y fronteras}{Marco · reporte §3.6 y anexo B}{1:15}
-
-\marco{Esto es el código real del notebook. Cada celda se numera como $k=i\cdot N_y+j$, y \textbf{cada fila de la matriz
-es la ecuación de una celda}. Si la celda es sólida, la ecuación es trivial. Para cada uno de los cuatro vecinos: si
-es la salida, menos dos en la diagonal; si es fluido, más uno al vecino y menos uno a la diagonal. Como \textbf{la matriz
-no cambia en el tiempo, se factoriza una sola vez} con LU y en cada paso sólo se resuelve.}
-\marco{Abajo están las fronteras. Usamos \textbf{celdas fantasma}: una fila extra fuera de la pared. Si el fantasma vale
-menos el valor del primer nodo, \textbf{el promedio en la pared da cero}.}
-
-\luis{O sea que el no deslizamiento no se pone en un nodo, sino a la mitad entre el fantasma y el primer nodo real.}
-
-\marco{Exacto.}
-
-% ---------------------------------------------------------------------
-\diapo{8}{Código II: el ciclo de tres pasos}{Marco · reporte §3.2 y §3.4}{1:00}
-
-\marco{Y este es el corazón del programa. Cada línea es una ecuación de las que vimos: calculamos la aceleración, el
-\textbf{paso uno} con Adams–Bashforth, la divergencia de $\vu^*$, el \textbf{paso dos} resolviendo Poisson y el
-\textbf{paso tres} restando las diferencias de presión en cada cara. Al final medimos cuánto cambió la velocidad: cuando el
-cambio por unidad de tiempo es menor que $10^{-4}$, \textbf{llegamos al estado estacionario}. Ahora lo vemos correr.}
+\diapo{5}{Condiciones iniciales y de frontera}{Luis · 1:30}
+\accion{Recorrer el dibujo de izquierda a derecha.}
+\luis{En la \textbf{entrada} el fluido llega con un \textbf{perfil parabólico}: más rápido en el centro y cero en las
+paredes, como en un tubo largo.}
+\luis{En las \textbf{paredes y en el escalón}, la velocidad es cero: \textbf{el fluido se pega a la pared}. Es la condición
+de no deslizamiento.}
+\luis{En la \textbf{salida} fijamos la presión en cero y suponemos que el flujo ya no cambia. Por eso hicimos el canal
+largo.}
+\luis{Y la \textbf{condición inicial}: el fluido empieza \textbf{quieto}, y avanzamos en el tiempo hasta que deja de
+cambiar. Marco, ¿cómo resolvemos todo esto en la computadora?}
 
 % =====================================================================
-\section{Demostración en vivo (Marco opera, Luis comenta)}
-\diapo{--}{Jupyter}{Ambos · 50\,\% de la exposición grupal}{2:30}
+\section*{3. Metodología y código (Marco)}
+\diapo{6}{De ecuaciones a números: la malla}{Marco · 1:30}
+\marco{La computadora no sabe derivar, sólo sumar y restar. Por eso \textbf{dividimos el canal en celdas}: veinte en la
+altura.}
+\marco{Cada variable va en su lugar: \textbf{la presión en el centro de la celda y las velocidades en las caras}. Así la
+velocidad de cada cara queda entre dos presiones, y la fuerza que la empuja es la diferencia entre ellas.}
+\marco{Y cada \textbf{derivada se cambia por una diferencia} entre vecinos: el cambio de $u$ entre dos celdas dividido entre
+el tamaño de la celda. Así cada ecuación se vuelve una cuenta.}
 
-\accion{Cambiar a la ventana de Jupyter. Celdas del bloque 0 a 4 ya ejecutadas.}
+\diapo{7}{El método: tres pasos en cada $\Delta t$}{Marco · 1:30}
+\marco{El problema es que la presión no tiene su propia ecuación. El \textbf{método de proyección} lo resuelve en tres
+pasos que se repiten en cada instante.}
+\marco{\textbf{Paso uno}: movemos el fluido con la viscosidad y la convección, \textbf{sin la presión}. Eso da una
+velocidad de prueba.}
+\marco{\textbf{Paso dos}: esa velocidad crea o pierde un poco de masa. Calculamos \textbf{la presión que hace falta para
+corregirlo}.}
+\marco{\textbf{Paso tres}: \textbf{corregimos la velocidad} con esa presión. Ahora sí se conserva la masa.}
+\luis{¿Y eso es estable?}
+\marco{Sí, si en el paso uno usamos también la aceleración del paso anterior; se llama Adams–Bashforth. Con el método más
+simple, Euler, la solución explota. Lo van a ver en la demostración.}
 
-\marco{Los parámetros están al inicio. Vamos a bajar la viscosidad: cambio Reynolds de 200 a \textbf{400}.}
-\accion{Escribir \texttt{RE = 400}; ejecutar la celda de parámetros y la del caso base (Ctrl+Enter en cada una).}
-\luis{Mientras corre: está haciendo unos \textbf{8\,300 pasos de tiempo}, y en cada uno los tres pasos del método. Tarda
-unos 8 segundos.}
-\accion{Salida esperada: \texttt{converge en t = 138.2 (8294 pasos) | x\_r/S = 8.26}; divergencia del orden de
-$10^{-15}$.}
-\marco{Convergió: el remolino pasó de 4.91 a \textbf{8.26 alturas de escalón}, y la divergencia sigue siendo
-prácticamente cero.}
-\accion{Ejecutar la celda de figuras.}
-\luis{Se ve el remolino mucho más largo, y aparece una \textbf{pequeña burbuja en el techo}, entre 4.2 y 4.5 alturas: con
-menos viscosidad también se separa la capa límite de arriba.}
+\diapo{8}{El código en Python}{Marco · 1:15}
+\marco{El código es un solo notebook. Primero los \textbf{parámetros}; luego se arma \textbf{la malla} y \textbf{la matriz
+de la presión}, que se calcula una sola vez; después viene \textbf{el ciclo en el tiempo}, con los tres pasos, que se
+repite miles de veces; y al final los \textbf{resultados}: el largo del remolino, las gráficas y los videos.}
+\marco{Usamos numpy para las cuentas, scipy para la presión y matplotlib para las gráficas. Corre completo en unos cinco
+minutos. Ahora lo vemos funcionar.}
 
-\marco{Ahora probamos la estabilidad. Primero el paso de tiempo justo en el límite de Courant:}
+% =====================================================================
+\section*{Demostración en Jupyter (Marco opera, Luis comenta) · 2:15}
+\accion{Cambiar a Jupyter.}
+\marco{Los parámetros están al inicio. Vamos a \textbf{bajar la viscosidad}: cambio Reynolds de 200 a \textbf{400}.}
+\accion{Escribir \texttt{RE = 400}; ejecutar la celda de parámetros y la del caso base.}
+\luis{Mientras corre: está haciendo unos ocho mil pasos de tiempo. Tarda unos ocho segundos.}
+\accion{Sale: \texttt{converge ... x\_r/S = 8.26}. Ejecutar la celda de figuras.}
+\marco{El remolino creció de 4.9 a \textbf{8.3 alturas de escalón}.}
+\luis{Y aparece una pequeña burbuja en el techo: con menos viscosidad también se separa arriba.}
+\marco{Ahora probamos la estabilidad. Un paso de tiempo justo en el límite:}
 \begin{lstlisting}
 simular(200, dt=(H/20)/1.5, t_max=150)
 \end{lstlisting}
-\accion{Salida esperada: \texttt{diverge en t = 1.2 (36 pasos)}.}
-\luis{\textbf{Explotó en 36 pasos}: el fluido avanza más de una celda por paso y los errores crecen.}
-\marco{Y ahora con el paso normal, pero con Euler en lugar de Adams–Bashforth:}
+\accion{Sale: \texttt{diverge en t = 1.2 (36 pasos)}.}
+\luis{\textbf{Explotó en 36 pasos}: el fluido avanza más de una celda por paso.}
+\marco{Y con el método de Euler:}
 \begin{lstlisting}
 simular(200, ab2=False, t_max=150)
 \end{lstlisting}
-\accion{Salida esperada: \texttt{diverge en t = 11.8 (706 pasos)}.}
-\marco{\textbf{Explota a los 706 pasos}, aunque el paso de tiempo sea la mitad del límite. Por eso usamos
-Adams–Bashforth.}
-\accion{Regresar \texttt{RE = 200} y volver a la presentación.}
+\accion{Sale: \texttt{diverge en t = 11.8 (706 pasos)}. Regresar \texttt{RE = 200} y volver a la presentación.}
+\marco{\textbf{También explota}, aunque el paso de tiempo es la mitad del límite.}
 
 % =====================================================================
-\section{Verificación y resultados}
-\diapo{9}{Estabilidad y convergencia}{Luis · reporte §3.4, §5.3 y §5.4}{1:30}
+\section*{4. Resultados y análisis paramétrico}
+\diapo{9}{Caso base, $\mathit{Re}=200$}{Marco · 1:15}
+\marco{Arriba está la velocidad: el chorro sale del canal y abajo queda el remolino. En medio, la vorticidad, que es qué
+tanto gira el fluido. Abajo, la presión, que \textbf{sube después del escalón}: esa es la causa de la separación.}
+\marco{El remolino mide \textbf{4.91 alturas de escalón}, y la masa se conserva: el error es prácticamente cero.}
 
-\luis{Lo que acabamos de ver es la \textbf{condición CFL}: en un paso de tiempo el fluido no debe avanzar más de una
-celda, $\Delta t\le\Delta x/|u|_{\max}$. Con celdas de 0.05 y velocidad máxima 1.5, el límite es 0.033. El límite por
-difusión es 0.125, así que manda el CFL; nosotros usamos la mitad.}
-\lee{``delta t menor o igual a delta x entre la velocidad máxima''.}
-\luis{En la tabla: con 0.25, 0.5 y 0.8 veces el límite, el resultado es \textbf{idéntico}, 4.914; sólo cambia el número de
-pasos. En el límite explota.}
-\luis{Para la \textbf{malla} corrimos 10, 20 y 40 celdas por altura: 4.754, 4.914 y 4.946. El cambio se reduce unas cinco
-veces cada vez que duplicamos la malla. Con eso calculamos el \textbf{orden observado}: logaritmo base dos del cociente
-de los cambios, \textbf{2.3}, que coincide con el segundo orden del esquema. Con la extrapolación de Richardson el valor
-con malla infinita es 4.95, así que \textbf{con 20 celdas el error es de 0.8\,\%}.}
-
-\marco{¿Y la masa sí se conserva?}
-
-\luis{Sí: la divergencia final es del orden de $10^{-15}$, que es el cero de la computadora.}
-
-% ---------------------------------------------------------------------
-\diapo{10}{Análisis paramétrico: viscosidad}{Marco · reporte §4.3, §5.1 y §5.2}{1:30}
-
+\diapo{10}{¿Qué pasa si cambiamos la viscosidad?}{Marco · 1:30}
 \accion{Reproducir el video.}
-\marco{Aquí están tres arranques desde el reposo, con \textbf{Reynolds 100, 300 y 600}. La tinta son partículas que el
-flujo arrastra. Con Reynolds 100 todo se calma pronto; con 600 se forman varios vórtices que viajan y se juntan, y aparece
-la burbuja del techo.}
-\marco{En la tabla: el remolino pasa de \textbf{2.84 a 10.06 alturas de escalón}. ¿Por qué crece? Con menos viscosidad,
-la difusión tarda más en transmitir el momento del chorro hacia el piso, mientras la convección lo lleva más lejos, así
-que se vuelve a pegar más adelante. Crece casi lineal hasta Reynolds 400; después más lento, porque \textbf{la burbuja del
-techo estrecha el paso y empuja el chorro hacia abajo}.}
+\marco{Aquí están tres casos a la vez. Con \textbf{menos viscosidad el remolino es más largo}: 2.8, 6.7 y 10.1 alturas de
+escalón.}
+\marco{¿Por qué? La viscosidad es la que transmite el movimiento del chorro hacia el piso. Si es menor, eso tarda más y el
+fluido se vuelve a pegar más lejos. Y desde Reynolds 400 aparece \textbf{otro remolino en el techo}.}
+\luis{Y la velocidad de entrada hace lo mismo: como Reynolds es $UH/\nu$, \textbf{subir la velocidad es igual que bajar la
+viscosidad}.}
 
-\luis{Y el tiempo para llegar al estacionario también crece, de 20 a 289 unidades: el transitorio lo controla la
-difusión viscosa.}
+\diapo{11}{Estabilidad: paso de tiempo y malla}{Luis · 1:30}
+\luis{Para el \textbf{paso de tiempo} hay una regla, la \textbf{condición CFL}: en un paso, el fluido no debe avanzar más de
+una celda. Si la cumplimos, el resultado es el mismo, 4.91, sin importar el paso. En el límite, \textbf{explota}, como
+vimos.}
+\luis{Para la \textbf{malla} probamos 10, 20 y 40 celdas: 4.75, 4.91 y 4.95. De 20 a 40 \textbf{cambia menos de 1\,\%},
+así que la malla de 20 es suficiente.}
 
-\marco{\emph{Opcional:} y aumentar la velocidad de entrada es lo mismo que aumentar Reynolds, porque $\Rey=UH/\nu$. Para
-agua en un canal de un centímetro, Reynolds de 100 a 600 son velocidades de 1 a 6 centímetros por segundo.}
-
-% ---------------------------------------------------------------------
-\diapo{11}{Validación}{Luis · reporte §6}{1:00}
-
-\luis{Comparamos con simulaciones 2D publicadas del mismo problema. Entre Reynolds 200 y 600 la diferencia es de
-\textbf{2\,\% o menos}; en Reynolds 100 es 5\,\%. Como nuestro error de malla es menor a 1\,\%, esas diferencias son del
-tamaño de las diferencias entre los propios estudios publicados, que usan canales de entrada y dominios distintos. Y
-reproducimos el remolino del techo a partir de Reynolds 400, como en la literatura.}
-
-% ---------------------------------------------------------------------
-\diapo{12}{Conclusiones}{Ambos}{0:45}
-
-\luis{En resumen: planteamos continuidad y Navier–Stokes con sus condiciones de frontera, y verificamos el resultado:
-\textbf{el método es estable dentro del CFL y de segundo orden, con error de malla menor a 1\,\%}.}
-
-\marco{Lo resolvimos con el método de proyección en malla escalonada, \textbf{la masa se conserva a precisión de
-máquina}, reproducimos la separación, la recirculación y el reacoplamiento, y coincidimos con la literatura dentro de
-2\,\%. Muchas gracias; ¿tienen preguntas?}
+% =====================================================================
+\section*{5. Conclusiones (ambos)}
+\diapo{12}{Conclusiones}{Ambos · 1:00}
+\luis{En lo físico: \textbf{el escalón frena el fluido y sube la presión, y por eso se separa}. Con menos viscosidad el
+remolino es más largo, y desde Reynolds 400 aparece otro en el techo.}
+\marco{Los alcances: el programa resuelve Navier–Stokes, conserva la masa, es estable si respetamos el CFL y
+\textbf{coincide con la literatura con 2\,\% o menos} de diferencia. Las limitaciones: es \textbf{sólo 2D y laminar}, y
+para Reynolds más altos haría falta una malla más fina. Muchas gracias, ¿tienen preguntas?}
 
 % =====================================================================
 \newpage
-\section*{Preguntas individuales probables}
-La rúbrica da el 40\,\% de la calificación individual a una pregunta del profesor, y no se puede pedir ayuda al compañero.
-Cada quien debe dominar \textbf{todo}, pero sobre todo su parte. Más preguntas en
-\texttt{guia/guia\_explicacion.pdf}, sección C.
-
-\subsection*{Luis (formulación, estabilidad, validación)}
+\section*{Preguntas probables (respuestas cortas)}
+\subsection*{Luis}
 \begin{description}[leftmargin=1em, style=nextline]
-  \item[¿Por qué se separa el flujo?] El canal se ensancha, el fluido se frena y la presión sube: gradiente adverso. El
-    fluido junto a la pared es lento y no puede avanzar contra ese aumento de presión.
-  \item[¿Por qué la velocidad máxima final es 0.75?] Por continuidad, el mismo caudal pasa por un canal el doble de alto:
-    la media baja de 1 a 0.5 y el máximo de la parábola es $1.5\times0.5=0.75$.
-  \item[¿Qué pasa si cambias la condición de salida?] La salida supone flujo desarrollado. Si el canal fuera más corto que
-    el remolino, la condición estaría mal y el resultado cambiaría; por eso usamos hasta 25 alturas.
-  \item[¿Cómo calculaste el orden de convergencia?] Con tres mallas de razón 2:
-    $p=\log_2\big[(x_{20}-x_{10})/(x_{40}-x_{20})\big]=\log_2(0.160/0.032)\approx2.3$.
-  \item[¿Qué es el número de Reynolds aquí?] $\Rey=UH/\nu$, con la velocidad media de entrada y la altura del canal
-    ensanchado, igual al diámetro hidráulico del canal de entrada, $2h$.
+  \item[¿Por qué se separa el flujo?] Al ensancharse el canal el fluido se frena y la presión sube; el fluido lento junto a
+    la pared no puede avanzar contra esa presión.
+  \item[¿Qué es el número de Reynolds?] $\mathit{Re}=UH/\nu$: compara la inercia con la viscosidad. Más Reynolds es menos
+    viscosidad o más velocidad.
+  \item[¿Por qué la entrada es una parábola?] Es el perfil de un fluido que viene de un canal largo: cero en las paredes y
+    máximo en el centro.
+  \item[¿Qué es la condición CFL?] En un paso de tiempo el fluido no debe avanzar más de una celda:
+    $\Delta t\le\Delta x/u_{\max}$. Si no se cumple, la solución explota.
 \end{description}
-
-\subsection*{Marco (método, código, demostración)}
+\subsection*{Marco}
 \begin{description}[leftmargin=1em, style=nextline]
-  \item[¿De dónde sale la ecuación de Poisson?] De aplicar divergencia a $\vu^{n+1}=\vu^*-\Delta t\nabla p$ y pedir
-    $\nabla\cdot\vu^{n+1}=0$.
-  \item[¿Por qué la matriz se factoriza una sola vez?] Porque sólo depende de la malla y de las condiciones de frontera, no
-    del tiempo ni de la velocidad; en cada paso sólo cambia el lado derecho.
-  \item[¿Qué es una celda fantasma?] Una fila fuera del dominio cuyo valor es el opuesto del primer nodo, para que el
-    promedio sobre la pared dé cero (no deslizamiento).
-  \item[¿Por qué malla escalonada?] Para que cada velocidad quede entre dos presiones y la fuerza de presión use vecinos
-    directos; así no aparecen oscilaciones en tablero de ajedrez.
-  \item[¿Cómo sabe el código que llegó al estado estacionario?] Cuando $\max|\vu^{n+1}-\vu^n|/\Delta t<10^{-4}$; con
-    $10^{-5}$ el resultado cambia menos de 0.3\,\%.
+  \item[¿Por qué no se usa la presión en el paso uno?] Porque todavía no la conocemos: se calcula en el paso dos justo para
+    que se conserve la masa.
+  \item[¿Por qué la presión va en el centro y la velocidad en las caras?] Para que cada velocidad quede entre dos presiones
+    y la fuerza que la empuja sea su diferencia.
+  \item[¿Por qué la matriz de presión se calcula una sola vez?] Porque sólo depende de la malla, no del tiempo; en cada paso
+    sólo cambia el lado derecho.
+  \item[¿Cómo sabe el programa que ya terminó?] Cuando la velocidad casi deja de cambiar entre un paso y el siguiente
+    (cambio menor a $10^{-4}$).
 \end{description}
+Más preguntas, con más detalle, en \texttt{guia/guia\_explicacion.pdf}.
 
 \end{document}
