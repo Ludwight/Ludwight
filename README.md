@@ -13,7 +13,8 @@ convección por promedio (segundo orden) y Adams–Bashforth en el tiempo. El ar
 | Guion de la exposición (diálogo Luis–Marco, tiempos y demo en vivo) | `exposicion/guion_exposicion.pdf` (fuente: `.tex`) |
 | Videos de la simulación (1080p) | `figures/arranque_re200.mp4`, `figures/comparacion_re.mp4` |
 | Video para YouTube (2:39, con voz y subtítulos; versión sin voz y guion con tiempos) | `video/video_proyecto.mp4`, `video/video_proyecto_sin_voz.mp4`, `video/guion_video.md` |
-| Enlace YouTube | https://youtu.be/kBtmlx2zd3A |
+| Video (YouTube) | https://www.youtube.com/watch?v=MlGyUvwesJE |
+| Videos de la simulación (YouTube) | https://youtu.be/kBtmlx2zd3A |
 | Figuras | `figures/` (las genera el notebook) |
 
 ## Ejecutar
